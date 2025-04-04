@@ -1,5 +1,43 @@
 const Budget = require("../model/budgetModel");
 
+const getBudgets = async (req, res) => {
+  try {
+    const { id, user_id } = req.query;
+
+    if (id) {
+      const budget = await Budget.findById(id);
+      if (!budget) {
+        return res.status(404).json({
+          status: false,
+          message: "Budget not found",
+        });
+      }
+
+      return res.status(200).json({
+        status: true,
+        message: "Budget fetched successfully",
+        budget,
+      });
+    } else {
+      const query = user_id ? { user_id } : {};
+      const budgets = await Budget.find(query).sort({ createdAt: -1 });
+
+      return res.status(200).json({
+        status: true,
+        message: "All budgets fetched successfully",
+        budgets,
+      });
+    }
+  } catch (error) {
+    console.error("Get budgets error:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
 const createBudget = async (req, res) => {
   try {
     const {
@@ -33,61 +71,6 @@ const createBudget = async (req, res) => {
     });
   } catch (error) {
     console.error("Create budget error:", error);
-    return res.status(500).json({
-      status: false,
-      message: "Server error",
-      error: error.message,
-    });
-  }
-};
-
-const getAllBudgets = async (req, res) => {
-  try {
-    const { user_id } = req.query;
-
-    const query = user_id ? { user_id } : {};
-    const budgets = await Budget.find(query).sort({ createdAt: -1 });
-
-    return res.status(200).json({
-      status: true,
-      message: "Budgets fetched successfully",
-      budgets,
-    });
-  } catch (error) {
-    console.error("Get budgets error:", error);
-    return res.status(500).json({
-      status: false,
-      message: "Server error",
-      error: error.message,
-    });
-  }
-};
-
-const getBudgetById = async (req, res) => {
-  try {
-    const { id } = req.query;
-    if (!id) {
-      return res.status(400).json({
-        status: false,
-        message: "Budget ID is required",
-      });
-    }
-
-    const budget = await Budget.findById(id);
-    if (!budget) {
-      return res.status(404).json({
-        status: false,
-        message: "Budget not found",
-      });
-    }
-
-    return res.status(200).json({
-      status: true,
-      message: "Budget fetched successfully",
-      budget,
-    });
-  } catch (error) {
-    console.error("Get budget error:", error);
     return res.status(500).json({
       status: false,
       message: "Server error",
@@ -170,9 +153,8 @@ const deleteBudget = async (req, res) => {
 };
 
 module.exports = {
+  getBudgets,
   createBudget,
-  getAllBudgets,
-  getBudgetById,
   updateBudget,
   deleteBudget,
 };

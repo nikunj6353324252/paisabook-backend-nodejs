@@ -2,15 +2,13 @@ const express = require("express");
 const router = express.Router();
 const {
   createBudget,
-  getAllBudgets,
-  getBudgetById,
   updateBudget,
   deleteBudget,
+  getBudgets,
 } = require("../controller/budgetController");
 
 router.post("/budget", createBudget);
-router.get("/budget", getAllBudgets);
-router.get("/budget", getBudgetById);
+router.get("/budget", getBudgets);
 router.put("/budget", updateBudget);
 router.delete("/budget", deleteBudget);
 
