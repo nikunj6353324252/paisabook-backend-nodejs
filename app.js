@@ -4,21 +4,21 @@ const path = require("path");
 const connectDB = require("./server/Config/db");
 const userRoutes = require("./server/routes/userRoutes");
 const expenseRoutes = require("./server/routes/expenseRoutes");
+const budgetRoutes = require("./server/routes/budgetRoutes");
 
 const app = express();
 app.use(express.json());
-connectDB(); // ✅ MongoDB connection
+connectDB();
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
-// Routes can go here (e.g., app.use('/api/users', userRoutes))
 app.use("/api/auth", userRoutes.routes);
-app.use(expenseRoutes.routes);
+app.use("/api", expenseRoutes.routes);
+app.use("/api", budgetRoutes.routes);
 
-// Catch-all route
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });

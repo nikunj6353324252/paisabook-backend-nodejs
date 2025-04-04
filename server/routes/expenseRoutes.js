@@ -6,8 +6,8 @@ const {
 } = require("../controller/expenseController");
 const router = express.Router();
 
-router.get("/api/expense", getExpenses);
-router.post("/api/expense", addExpense);
-router.delete("/api/expense", deleteExpense);
+router.get("/expense", getExpenses);
+router.post("/expense", addExpense);
+router.delete("/expense", deleteExpense);
 
 module.exports = { routes: router };
