@@ -1,81 +1,282 @@
+// const userModel = require("../model/userModel");
+// const bcrypt = require("bcrypt");
+// const jwt = require("jsonwebtoken");
+
+// // REGISTER
+// const registerUser = async (req, res) => {
+//   const { mobile, email, password, confirmPassword } = req.body;
+
+//   if (!mobile || !email || !password || !confirmPassword) {
+//     return res
+//       .status(400)
+//       .json({ status: false, message: "All fields are required" });
+//   }
+
+//   if (password !== confirmPassword) {
+//     return res
+//       .status(400)
+//       .json({ status: false, message: "Passwords do not match" });
+//   }
+
+//   const mobileExists = await userModel.findOne({ mobile });
+//   if (mobileExists) {
+//     return res
+//       .status(409)
+//       .json({ status: false, message: "Mobile number already registered" });
+//   }
+
+//   const emailExists = await userModel.findOne({ email });
+//   if (emailExists) {
+//     return res
+//       .status(409)
+//       .json({ status: false, message: "email already registered" });
+//   }
+
+//   try {
+//     const hashedPassword = await bcrypt.hash(password, 10);
+
+//     const newUser = new userModel({
+//       mobile,
+//       email,
+//       password: hashedPassword,
+//     });
+
+//     await newUser.save();
+
+//     return res
+//       .status(201)
+//       .json({ status: true, message: "Registration successful" });
+//   } catch (error) {
+//     return res
+//       .status(500)
+//       .json({ status: false, message: "Server error", error });
+//   }
+// };
+
+// // LOGIN
+// const loginUser = async (req, res) => {
+//   console.log("body", req.body);
+//   const { mobile, password } = req.body;
+
+//   if (!mobile || !password) {
+//     return res
+//       .status(400)
+//       .json({ status: false, message: "Mobile and password are required" });
+//   }
+
+//   try {
+//     const user = await userModel.findOne({ mobile });
+//     if (!user) {
+//       return res
+//         .status(401)
+//         .json({ status: false, message: "Invalid mobile number or password" });
+//     }
+
+//     const passwordMatch = await bcrypt.compare(password, user.password);
+//     if (!passwordMatch) {
+//       return res
+//         .status(401)
+//         .json({ status: false, message: "Invalid mobile number or password" });
+//     }
+
+//     const token = jwt.sign(
+//       { userId: user._id, mobile: user.mobile },
+//       process.env.JWT_SECRET,
+//       { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+//     );
+
+//     return res.status(200).json({
+//       status: true,
+//       message: "Login successful",
+//       user: {
+//         id: user._id,
+//         mobile: user.mobile,
+//         email: user.email,
+//         username: user.username,
+//         token: token,
+//       },
+//     });
+//   } catch (error) {
+//     return res
+//       .status(500)
+//       .json({ status: false, message: "Server error", error });
+//   }
+// };
+
+// const updateUserProfile = async (req, res) => {
+//   const { id, email, username } = req.body;
+
+//   if (!id) {
+//     return res
+//       .status(400)
+//       .json({ status: false, message: "User ID is required" });
+//   }
+
+//   try {
+//     const user = await userModel.findById(id);
+//     if (!user) {
+//       return res.status(404).json({ status: false, message: "User not found" });
+//     }
+
+//     // Check if email already exists for another user
+//     if (email && email !== user.email) {
+//       const existingEmail = await userModel.findOne({ email });
+//       if (existingEmail && existingEmail._id.toString() !== id) {
+//         return res
+//           .status(409)
+//           .json({ status: false, message: "Email already in use" });
+//       }
+//       user.email = email;
+//     }
+
+//     // Check if username already exists for another user
+//     if (username && username !== user.username) {
+//       const existingUsername = await userModel.findOne({ username });
+//       if (existingUsername && existingUsername._id.toString() !== id) {
+//         return res
+//           .status(409)
+//           .json({ status: false, message: "Username already in use" });
+//       }
+//       user.username = username;
+//     }
+
+//     await user.save();
+
+//     return res.status(200).json({
+//       status: true,
+//       message: "Profile updated successfully",
+//       user: {
+//         id: user._id,
+//         email: user.email,
+//         username: user.username,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Update error:", error);
+//     return res
+//       .status(500)
+//       .json({ status: false, message: "Server error", error });
+//   }
+// };
+
+// module.exports = {
+//   registerUser,
+//   loginUser,
+//   updateUserProfile,
+// };
+
 const userModel = require("../model/userModel");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
-// REGISTER
+// Generate JWT token
+const generateToken = (user) => {
+  return jwt.sign(
+    { userId: user._id, mobile: user.mobile },
+    process.env.JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+  );
+};
+
+// ======================== REGISTER ======================== //
+
 const registerUser = async (req, res) => {
-  const { mobile, email, password, confirmPassword } = req.body;
-
-  if (!mobile || !email || !password || !confirmPassword) {
-    return res
-      .status(400)
-      .json({ status: false, message: "All fields are required" });
-  }
-
-  if (password !== confirmPassword) {
-    return res
-      .status(400)
-      .json({ status: false, message: "Passwords do not match" });
-  }
-
-  const mobileExists = await userModel.findOne({ mobile });
-  if (mobileExists) {
-    return res
-      .status(409)
-      .json({ status: false, message: "Mobile number already registered" });
-  }
-
-  const emailExists = await userModel.findOne({ email });
-  if (emailExists) {
-    return res
-      .status(409)
-      .json({ status: false, message: "email already registered" });
-  }
-
   try {
+    const { mobile, email, password, confirmPassword } = req.body;
+
+    if (!mobile || !email || !password) {
+      return res.status(400).json({
+        status: false,
+        message: "Mobile, email, and password are required",
+      });
+    }
+
+    // If confirmPassword is present (from frontend), validate match
+    if (confirmPassword && password !== confirmPassword) {
+      return res
+        .status(400)
+        .json({ status: false, message: "Passwords do not match" });
+    }
+
+    // Check for existing mobile or email
+    const [mobileExists, emailExists] = await Promise.all([
+      userModel.findOne({ mobile }),
+      userModel.findOne({ email }),
+    ]);
+
+    if (mobileExists) {
+      return res
+        .status(409)
+        .json({ status: false, message: "Mobile number already registered" });
+    }
+
+    if (emailExists) {
+      return res
+        .status(409)
+        .json({ status: false, message: "Email already registered" });
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = new userModel({
+    const newUser = await userModel.create({
       mobile,
       email,
       password: hashedPassword,
+      user_name: "",
+      profile_image: "",
     });
 
-    await newUser.save();
+    const token = generateToken(newUser);
 
-    return res
-      .status(201)
-      .json({ status: true, message: "Registration successful" });
+    return res.status(201).json({
+      status: true,
+      message: "Registration successful",
+      user: {
+        id: newUser._id,
+        mobile: newUser.mobile,
+        email: newUser.email,
+        user_name: newUser.user_name,
+        profile_image: newUser.profile_image,
+      },
+      token,
+    });
   } catch (error) {
+    console.error("Register error:", error);
     return res
       .status(500)
-      .json({ status: false, message: "Server error", error });
+      .json({ status: false, message: "Server error", error: error.message });
   }
 };
 
-// LOGIN
+// ======================== LOGIN ======================== //
+
 const loginUser = async (req, res) => {
-  const { mobile, password } = req.body;
-
-  if (!mobile || !password) {
-    return res
-      .status(400)
-      .json({ status: false, message: "Mobile and password are required" });
-  }
-
   try {
+    const { mobile, password } = req.body;
+
+    if (!mobile || !password) {
+      return res
+        .status(400)
+        .json({ status: false, message: "Mobile and password are required" });
+    }
+
     const user = await userModel.findOne({ mobile });
     if (!user) {
-      return res
-        .status(401)
-        .json({ status: false, message: "Invalid mobile number or password" });
+      return res.status(401).json({
+        status: false,
+        message: "Invalid mobile number or password",
+      });
     }
 
-    const passwordMatch = await bcrypt.compare(password, user.password);
-    if (!passwordMatch) {
-      return res
-        .status(401)
-        .json({ status: false, message: "Invalid mobile number or password" });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({
+        status: false,
+        message: "Invalid mobile number or password",
+      });
     }
+
+    const token = generateToken(user);
 
     return res.status(200).json({
       status: true,
@@ -84,32 +285,36 @@ const loginUser = async (req, res) => {
         id: user._id,
         mobile: user.mobile,
         email: user.email,
-        username: user.username,
+        user_name: user.user_name,
       },
+      token,
     });
   } catch (error) {
+    console.error("Login error:", error);
     return res
       .status(500)
-      .json({ status: false, message: "Server error", error });
+      .json({ status: false, message: "Server error", error: error.message });
   }
 };
 
+// ======================== UPDATE PROFILE ======================== //
+
 const updateUserProfile = async (req, res) => {
-  const { id, email, username } = req.body;
-
-  if (!id) {
-    return res
-      .status(400)
-      .json({ status: false, message: "User ID is required" });
-  }
-
   try {
+    const { id, email, user_name } = req.body;
+
+    if (!id) {
+      return res
+        .status(400)
+        .json({ status: false, message: "User ID is required" });
+    }
+
     const user = await userModel.findById(id);
     if (!user) {
       return res.status(404).json({ status: false, message: "User not found" });
     }
 
-    // Check if email already exists for another user
+    // Check email duplication
     if (email && email !== user.email) {
       const existingEmail = await userModel.findOne({ email });
       if (existingEmail && existingEmail._id.toString() !== id) {
@@ -120,15 +325,15 @@ const updateUserProfile = async (req, res) => {
       user.email = email;
     }
 
-    // Check if username already exists for another user
-    if (username && username !== user.username) {
-      const existingUsername = await userModel.findOne({ username });
+    // Check username duplication
+    if (user_name && user_name !== user.user_name) {
+      const existingUsername = await userModel.findOne({ user_name });
       if (existingUsername && existingUsername._id.toString() !== id) {
         return res
           .status(409)
           .json({ status: false, message: "Username already in use" });
       }
-      user.username = username;
+      user.user_name = user_name;
     }
 
     await user.save();
@@ -139,14 +344,14 @@ const updateUserProfile = async (req, res) => {
       user: {
         id: user._id,
         email: user.email,
-        username: user.username,
+        user_name: user.user_name,
       },
     });
   } catch (error) {
-    console.error("Update error:", error);
+    console.error("Update profile error:", error);
     return res
       .status(500)
-      .json({ status: false, message: "Server error", error });
+      .json({ status: false, message: "Server error", error: error.message });
   }
 };
 
