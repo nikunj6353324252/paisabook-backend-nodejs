@@ -6,6 +6,7 @@ const userRoutes = require("./server/routes/userRoutes");
 const expenseRoutes = require("./server/routes/expenseRoutes");
 const budgetRoutes = require("./server/routes/budgetRoutes");
 const incomeRoutes = require("./server/routes/incomeRoutes");
+const authMiddleware = require("./server/middleware/authMiddleware");
 
 const app = express();
 app.use(express.json());
@@ -17,9 +18,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/api/auth", userRoutes.routes);
-app.use("/api", expenseRoutes.routes);
-app.use("/api", budgetRoutes.routes);
-app.use("/api", incomeRoutes.routes);
+app.use("/api", authMiddleware, expenseRoutes.routes);
+app.use("/api", authMiddleware, budgetRoutes.routes);
+app.use("/api", authMiddleware, incomeRoutes.routes);
 
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
