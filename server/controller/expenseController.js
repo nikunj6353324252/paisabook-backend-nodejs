@@ -1,4 +1,5 @@
 const expenseModel = require("../model/expenseModel");
+const Budget = require("../model/budgetModel");
 
 const getExpenses = async (req, res) => {
   try {
@@ -65,6 +66,28 @@ const addExpense = async (req, res) => {
       return res.status(400).json({
         status: false,
         message: "User ID is required",
+      });
+    }
+
+    const query = {};
+    if (user_id) query.user_id = user_id;
+    if (budget_category) query.budget_category = budget_category;
+
+    const budgets = await Budget.find(query).sort({ createdAt: -1 });
+
+    if (budgets.length > 0) {
+      const budget = budgets[0];
+      const updatedSpend = budget.spend + parseFloat(amount);
+
+      if (updatedSpend > budget.budget_limit) {
+        return res.status(400).json({
+          status: false,
+          message: "Expense exceeds budget limit",
+        });
+      }
+
+      await Budget.findByIdAndUpdate(budget._id, {
+        spend: updatedSpend,
       });
     }
 
