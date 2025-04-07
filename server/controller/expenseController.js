@@ -78,11 +78,15 @@ const addExpense = async (req, res) => {
     if (budgets.length > 0) {
       const budget = budgets[0];
       const updatedSpend = budget.spend + parseFloat(amount);
+      const usage = updatedSpend / budget.budget_limit;
 
       if (updatedSpend > budget.budget_limit) {
         return res.status(400).json({
           status: false,
           message: "Expense exceeds budget limit",
+          data: {
+            usage: usage,
+          },
         });
       }
 
