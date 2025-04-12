@@ -27,6 +27,10 @@ const expenseSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    max_threshold: {
+      type: Number,
+      required: true,
+    },
   },
   {
     timestamps: true,

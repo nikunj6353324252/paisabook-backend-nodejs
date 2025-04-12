@@ -46,8 +46,10 @@ const addExpense = async (req, res) => {
       budget_category = "",
       attachment_bill = "",
       user_id,
+      max_threshold
     } = req.body;
 
+    // Basic validation
     if (!amount || isNaN(amount)) {
       return res.status(400).json({
         status: false,
@@ -69,32 +71,36 @@ const addExpense = async (req, res) => {
       });
     }
 
-    const query = {};
-    if (user_id) query.user_id = user_id;
+    // Find latest budget
+    const query = { user_id };
     if (budget_category) query.budget_category = budget_category;
 
     const budgets = await Budget.find(query).sort({ createdAt: -1 });
+    const budget = budgets[0];
 
-    if (budgets.length > 0) {
-      const budget = budgets[0];
+    let usage = 0;
+
+    if (budget) {
       const updatedSpend = budget.spend + parseFloat(amount);
-      const usage = updatedSpend / budget.budget_limit;
+      usage = updatedSpend / budget.budget_limit;
 
       if (updatedSpend > budget.budget_limit) {
         return res.status(400).json({
           status: false,
           message: "Expense exceeds budget limit",
           data: {
-            usage: usage,
+            usage,
           },
         });
       }
 
+      // Update budget spend
       await Budget.findByIdAndUpdate(budget._id, {
         spend: updatedSpend,
       });
     }
 
+    // Create new expense
     const newExpense = await expenseModel.create({
       amount,
       description,
@@ -102,12 +108,14 @@ const addExpense = async (req, res) => {
       budget_category,
       attachment_bill,
       user_id,
+      max_threshold
     });
 
     return res.status(201).json({
       status: true,
       message: "Expense added successfully",
       expense: newExpense,
+      max_threshold_alert_visible: usage >= max_threshold,
     });
   } catch (error) {
     console.error("Add Expense error:", error);
@@ -118,6 +126,89 @@ const addExpense = async (req, res) => {
     });
   }
 };
+
+// const addExpense = async (req, res) => {
+//   try {
+//     const {
+//       amount,
+//       description = "",
+//       date,
+//       budget_category = "",
+//       attachment_bill = "",
+//       user_id,
+//       max_threshold,
+//     } = req.body;
+
+//     if (!amount || isNaN(amount)) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "Amount is required and must be a valid number",
+//       });
+//     }
+
+//     if (!date) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "Date is required",
+//       });
+//     }
+
+//     if (!user_id) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "User ID is required",
+//       });
+//     }
+
+//     const query = {};
+//     if (user_id) query.user_id = user_id;
+//     if (budget_category) query.budget_category = budget_category;
+
+//     const budgets = await Budget.find(query).sort({ createdAt: -1 });
+//     const budget = budgets[0];
+//     const updatedSpend = budget.spend + parseFloat(amount);
+//     const usage = updatedSpend / budget.budget_limit;
+
+//     if (budgets.length > 0) {
+//       if (updatedSpend > budget.budget_limit) {
+//         return res.status(400).json({
+//           status: false,
+//           message: "Expense exceeds budget limit",
+//           data: {
+//             usage: usage,
+//           },
+//         });
+//       }
+
+//       await Budget.findByIdAndUpdate(budget._id, {
+//         spend: updatedSpend,
+//       });
+//     }
+
+//     const newExpense = await expenseModel.create({
+//       amount,
+//       description,
+//       date,
+//       budget_category,
+//       attachment_bill,
+//       user_id,
+//     });
+
+//     return res.status(201).json({
+//       status: true,
+//       message: "Expense added successfully",
+//       expense: newExpense,
+//       max_threshold_alert_visible: usage >= max_threshold ? true : false,
+//     });
+//   } catch (error) {
+//     console.error("Add Expense error:", error);
+//     return res.status(500).json({
+//       status: false,
+//       message: "Server error",
+//       error: error.message,
+//     });
+//   }
+// };
 
 const deleteExpense = async (req, res) => {
   try {
