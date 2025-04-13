@@ -115,6 +115,7 @@ const addExpense = async (req, res) => {
       status: true,
       message: "Expense added successfully",
       expense: newExpense,
+      usage: usage,
       max_threshold_alert_visible: usage >= max_threshold,
     });
   } catch (error) {
