@@ -95,24 +95,26 @@ const createBudget = async (req, res) => {
 
 const updateBudget = async (req, res) => {
   try {
-    const { id } = req.body;
+    const { id, user_id } = req.body;
     const updateFields = req.body;
 
-    if (!id) {
+    if (!id || !user_id) {
       return res.status(400).json({
         status: false,
-        message: "Budget ID is required",
+        message: "Budget ID and User ID are required",
       });
     }
 
-    const updated = await Budget.findByIdAndUpdate(id, updateFields, {
-      new: true,
-    });
+    const updated = await Budget.findOneAndUpdate(
+      { _id: id, user_id },
+      updateFields,
+      { new: true }
+    );
 
     if (!updated) {
       return res.status(404).json({
         status: false,
-        message: "Budget not found",
+        message: "Budget not found or unauthorized",
       });
     }
 
@@ -133,21 +135,21 @@ const updateBudget = async (req, res) => {
 
 const deleteBudget = async (req, res) => {
   try {
-    const { id } = req.query;
+    const { id, user_id } = req.query;
 
-    if (!id) {
+    if (!id || !user_id) {
       return res.status(400).json({
         status: false,
-        message: "Budget ID is required",
+        message: "Budget ID and User ID are required",
       });
     }
 
-    const deleted = await Budget.findByIdAndDelete(id);
+    const deleted = await Budget.findOneAndDelete({ _id: id, user_id });
 
     if (!deleted) {
       return res.status(404).json({
         status: false,
-        message: "Budget not found",
+        message: "Budget not found or unauthorized",
       });
     }
 

@@ -83,21 +83,21 @@ const createIncome = async (req, res) => {
 
 const deleteIncome = async (req, res) => {
   try {
-    const { id } = req.query;
+    const { id, user_id } = req.query;
 
-    if (!id) {
+    if (!id || !user_id) {
       return res.status(400).json({
         status: false,
-        message: "Income ID is required",
+        message: "Income ID and User ID are required",
       });
     }
 
-    const deletedIncome = await Income.findByIdAndDelete(id);
+    const deletedIncome = await Income.findOneAndDelete({ _id: id, user_id });
 
     if (!deletedIncome) {
       return res.status(404).json({
         status: false,
-        message: "Income not found",
+        message: "Income not found or unauthorized",
       });
     }
 
