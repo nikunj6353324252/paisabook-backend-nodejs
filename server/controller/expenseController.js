@@ -3,7 +3,7 @@ const Budget = require("../model/budgetModel");
 
 const getExpenses = async (req, res) => {
   try {
-    const { id } = req.query;
+    const { id, user_id } = req.query;
 
     if (id) {
       const expense = await expenseModel.findById(id);
@@ -19,8 +19,17 @@ const getExpenses = async (req, res) => {
         message: "Expense fetched successfully",
         expense,
       });
+    } else if (user_id) {
+      const expenses = await expenseModel.find({ user_id }).sort({ date: -1 });
+
+      return res.status(200).json({
+        status: true,
+        message: "User expenses fetched successfully",
+        expenses,
+      });
     } else {
       const expenses = await expenseModel.find().sort({ date: -1 });
+
       return res.status(200).json({
         status: true,
         message: "All expenses fetched successfully",
@@ -46,7 +55,7 @@ const addExpense = async (req, res) => {
       budget_category = "",
       attachment_bill = "",
       user_id,
-      max_threshold
+      max_threshold,
     } = req.body;
 
     // Basic validation
@@ -90,6 +99,7 @@ const addExpense = async (req, res) => {
           message: "Expense exceeds budget limit",
           data: {
             usage,
+            remain: budget.budget_limit - budget.spend,
           },
         });
       }
@@ -108,7 +118,7 @@ const addExpense = async (req, res) => {
       budget_category,
       attachment_bill,
       user_id,
-      max_threshold
+      max_threshold,
     });
 
     return res.status(201).json({
