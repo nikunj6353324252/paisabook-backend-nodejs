@@ -7,8 +7,10 @@
     "bcrypt": "^5.1.1",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
+    "firebase-admin": "^13.2.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.13.1",
+    "node-cron": "^3.0.3",
     "simple-node-logger": "^21.8.12"
   },
   "devDependencies": {
