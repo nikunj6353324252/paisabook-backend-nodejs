@@ -7,10 +7,14 @@ const expenseRoutes = require("./server/routes/expenseRoutes");
 const budgetRoutes = require("./server/routes/budgetRoutes");
 const incomeRoutes = require("./server/routes/incomeRoutes");
 const authMiddleware = require("./server/middleware/authMiddleware");
+const FCMTokenRoutes = require("./server/routes/FCMTokenRoutes");
+const startNotificationScheduler = require('./PushNotification')
 
 const app = express();
 app.use(express.json());
 connectDB();
+
+startNotificationScheduler();
 
 // Middleware
 app.use(express.json());
@@ -21,6 +25,7 @@ app.use("/api/auth", userRoutes.routes);
 app.use("/api", authMiddleware, expenseRoutes.routes);
 app.use("/api", authMiddleware, budgetRoutes.routes);
 app.use("/api", authMiddleware, incomeRoutes.routes);
+app.use("/api", FCMTokenRoutes.routes);
 
 app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
