@@ -31,7 +31,11 @@ app.use((req, res) => {
   res.status(404).json({ message: "Route not found" });
 });
 
+app.get("/", (req, res) => {
+  res.status(200).json({ message: "Welcome to the Expense Tracker API" });
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen("/", "0.0.0.0", () =>
+app.listen(PORT, "0.0.0.0", () =>
   console.log(`🚀 API Server running at http://localhost:${PORT}`)
 );
