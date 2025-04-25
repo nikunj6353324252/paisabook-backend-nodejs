@@ -8,7 +8,7 @@ const budgetRoutes = require("./server/routes/budgetRoutes");
 const incomeRoutes = require("./server/routes/incomeRoutes");
 const authMiddleware = require("./server/middleware/authMiddleware");
 const FCMTokenRoutes = require("./server/routes/FCMTokenRoutes");
-const startNotificationScheduler = require('./PushNotification')
+const startNotificationScheduler = require("./server/PushNotification");
 
 const app = express();
 app.use(express.json());
@@ -32,6 +32,6 @@ app.use((req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, "0.0.0.0", () =>
+app.listen("/", "0.0.0.0", () =>
   console.log(`🚀 API Server running at http://localhost:${PORT}`)
 );
