@@ -28,11 +28,7 @@ app.use("/api", authMiddleware, incomeRoutes.routes);
 app.use("/api", FCMTokenRoutes.routes);
 
 app.use((req, res) => {
-  res.status(404).json({ message: "Route not found" });
-});
-
-app.get("/", (req, res) => {
-  res.status(200).json({ message: "Welcome to the Expense Tracker API" });
+  res.status(404).json({ message: "Route not found found" });
 });
 
 const PORT = process.env.PORT || 3000;
