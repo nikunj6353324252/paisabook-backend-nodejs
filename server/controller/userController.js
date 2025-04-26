@@ -130,6 +130,42 @@ const loginUser = async (req, res) => {
   }
 };
 
+// ======================== GET USER PROFILE ======================== //
+
+const getUserProfile = async (req, res) => {
+  try {
+    const { user_id } = req.query;
+
+    if (!user_id) {
+      return res
+        .status(401)
+        .json({ status: false, message: "User id is required field" });
+    }
+
+    const user = await userModel.findById(user_id);
+    if (!user) {
+      return res.status(404).json({ status: false, message: "User not found" });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "User profile retrieved successfully",
+      user: {
+        id: user._id,
+        mobile: user.mobile,
+        email: user.email,
+        user_name: user.user_name,
+        profile_image: user.profile_image,
+      },
+    });
+  } catch (error) {
+    console.error("Get profile error:", error);
+    return res
+      .status(500)
+      .json({ status: false, message: "Server error", error: error.message });
+  }
+};
+
 // ======================== UPDATE PROFILE ======================== //
 
 const updateUserProfile = async (req, res) => {
@@ -191,5 +227,6 @@ const updateUserProfile = async (req, res) => {
 module.exports = {
   registerUser,
   loginUser,
+  getUserProfile,
   updateUserProfile,
 };

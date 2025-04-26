@@ -35,7 +35,55 @@ const getAllTokens = async (req, res) => {
   }
 };
 
+const deleteToken = async (req, res) => {
+  const { user_id } = req.query;
+
+  if (!user_id) {
+    return res.status(400).json({ message: "user_id is required." });
+  }
+
+  try {
+    const deleted = await FCMTokenModel.findOneAndDelete({ user_id });
+
+    if (!deleted) {
+      return res
+        .status(404)
+        .json({ message: "Token not found for the given user." });
+    }
+
+    return res.status(200).json({ message: "Token deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting token:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
+const getTokenByUserId = async (req, res) => {
+  const { user_id } = req.query;
+
+  if (!user_id) {
+    return res.status(400).json({ message: "user_id is required in params." });
+  }
+
+  try {
+    const tokenDoc = await FCMTokenModel.findOne({ user_id });
+
+    if (!tokenDoc) {
+      return res
+        .status(404)
+        .json({ message: "No token found for the given user." });
+    }
+
+    return res.status(200).json({ token: tokenDoc.token });
+  } catch (error) {
+    console.error("Error fetching token by user ID:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+};
+
 module.exports = {
   saveToken,
   getAllTokens,
+  deleteToken,
+  getTokenByUserId,
 };
