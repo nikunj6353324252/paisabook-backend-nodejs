@@ -11,7 +11,6 @@ const FCMTokenRoutes = require("./server/routes/FCMTokenRoutes");
 const startNotificationScheduler = require("./server/PushNotification");
 
 const app = express();
-app.use(express.json());
 connectDB();
 
 startNotificationScheduler();
