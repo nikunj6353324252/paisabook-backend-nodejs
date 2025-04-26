@@ -1,15 +1,16 @@
-const express = require("express");
-const router = express.Router();
-const {
+import express from "express";
+import {
   createBudget,
   updateBudget,
   deleteBudget,
   getBudgets,
-} = require("../controller/budgetController");
+} from "../controller/budgetController.js";
+
+const router = express.Router();
 
 router.post("/budget", createBudget);
 router.get("/budget", getBudgets);
 router.put("/budget", updateBudget);
 router.delete("/budget", deleteBudget);
 
-module.exports = { routes: router };
+export const BudgetRoutes = router;

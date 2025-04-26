@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const tokenSchema = new mongoose.Schema(
   {
@@ -13,8 +13,10 @@ const tokenSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, 
+    timestamps: true,
   }
 );
 
-module.exports = mongoose.model("Token", tokenSchema);
+const Token = mongoose.model("Token", tokenSchema);
+
+export default Token;

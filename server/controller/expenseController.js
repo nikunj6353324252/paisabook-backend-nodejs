@@ -1,12 +1,12 @@
-const expenseModel = require("../model/expenseModel");
-const Budget = require("../model/budgetModel");
+import Budget from "../model/budgetModel.js";
+import Expense from "../model/expenseModel.js";
 
 const getExpenses = async (req, res) => {
   try {
     const { id, user_id } = req.query;
 
     if (id) {
-      const expense = await expenseModel.findById(id);
+      const expense = await Expense.findById(id);
       if (!expense) {
         return res.status(404).json({
           status: false,
@@ -20,7 +20,7 @@ const getExpenses = async (req, res) => {
         expense,
       });
     } else if (user_id) {
-      const expenses = await expenseModel.find({ user_id }).sort({ date: -1 });
+      const expenses = await Expense.find({ user_id }).sort({ date: -1 });
 
       return res.status(200).json({
         status: true,
@@ -28,7 +28,7 @@ const getExpenses = async (req, res) => {
         expenses,
       });
     } else {
-      const expenses = await expenseModel.find().sort({ date: -1 });
+      const expenses = await Expense.find().sort({ date: -1 });
 
       return res.status(200).json({
         status: true,
@@ -108,7 +108,7 @@ const addExpense = async (req, res) => {
       }
     }
 
-    const newExpense = await expenseModel.create({
+    const newExpense = await Expense.create({
       amount,
       description,
       date,
@@ -135,98 +135,6 @@ const addExpense = async (req, res) => {
   }
 };
 
-
-// const addExpense = async (req, res) => {
-//   try {
-//     const {
-//       amount,
-//       description = "",
-//       date,
-//       budget_category = "",
-//       attachment_bill = "",
-//       user_id,
-//       max_threshold,
-//     } = req.body;
-//     console.log('budget_category',budget_category)
-
-//     if (!amount || isNaN(amount)) {
-//       return res.status(400).json({
-//         status: false,
-//         message: "Amount is required and must be a valid number",
-//       });
-//     }
-
-//     if (!date) {
-//       return res.status(400).json({
-//         status: false,
-//         message: "Date is required",
-//       });
-//     }
-
-//     if (!user_id) {
-//       return res.status(400).json({
-//         status: false,
-//         message: "User ID is required",
-//       });
-//     }
-
-//     if (budget_category) {
-//       const query = { user_id };
-//       if (budget_category) query.budget_category = budget_category;
-
-//       const budgets = await Budget.find(query).sort({ createdAt: -1 });
-//       const budget = budgets[0];
-
-//       let usage = 0;
-
-//       if (budget) {
-//         const updatedSpend = budget.spend + parseFloat(amount);
-//         usage = updatedSpend / budget.budget_limit;
-
-//         if (updatedSpend > budget.budget_limit) {
-//           return res.status(400).json({
-//             status: false,
-//             message: "Expense exceeds budget limit",
-//             data: {
-//               usage,
-//               remain: budget.budget_limit - budget.spend,
-//             },
-//           });
-//         }
-
-//         await Budget.findByIdAndUpdate(budget._id, {
-//           spend: updatedSpend,
-//         });
-//       }
-//     }
-
-//     const newExpense = await expenseModel.create({
-//       amount,
-//       description,
-//       date,
-//       budget_category,
-//       attachment_bill,
-//       user_id,
-//       max_threshold,
-//     });
-
-//     return res.status(201).json({
-//       status: true,
-//       message: "Expense added successfully",
-//       expense: newExpense,
-//       usage: usage,
-//       max_threshold_alert_visible: usage >= max_threshold,
-//     });
-//   } catch (error) {
-//     console.error("Add Expense error:", error);
-//     return res.status(500).json({
-//       status: false,
-//       message: "Server error",
-//       error: error.message,
-//     });
-//   }
-// };
-
 const deleteExpense = async (req, res) => {
   try {
     const { id, user_id, budget_category, amount } = req.query;
@@ -250,7 +158,7 @@ const deleteExpense = async (req, res) => {
       });
     }
 
-    const deletedExpense = await expenseModel.findOneAndDelete({
+    const deletedExpense = await Expense.findOneAndDelete({
       _id: id,
       user_id,
     });
@@ -277,8 +185,4 @@ const deleteExpense = async (req, res) => {
   }
 };
 
-module.exports = {
-  getExpenses,
-  addExpense,
-  deleteExpense,
-};
+export { getExpenses, addExpense, deleteExpense };

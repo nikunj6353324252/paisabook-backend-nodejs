@@ -1,4 +1,4 @@
-const Budget = require("../model/budgetModel");
+import Budget from "../model/budgetModel.js";
 
 const getBudgets = async (req, res) => {
   try {
@@ -168,9 +168,4 @@ const deleteBudget = async (req, res) => {
   }
 };
 
-module.exports = {
-  getBudgets,
-  createBudget,
-  updateBudget,
-  deleteBudget,
-};
+export { getBudgets, createBudget, updateBudget, deleteBudget };

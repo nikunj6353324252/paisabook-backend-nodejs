@@ -1,13 +1,13 @@
-const express = require("express");
-const {
+import express from "express";
+const router = express.Router();
+import {
   addExpense,
   deleteExpense,
   getExpenses,
-} = require("../controller/expenseController");
-const router = express.Router();
+} from "../controller/expenseController.js";
 
 router.get("/expense", getExpenses);
 router.post("/expense", addExpense);
 router.delete("/expense", deleteExpense);
 
-module.exports = { routes: router };
+export const ExpenseRoutes = router;

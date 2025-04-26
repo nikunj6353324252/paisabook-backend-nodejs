@@ -1,4 +1,4 @@
-const Income = require("../model/incomeModel");
+import Income from "../model/incomeModel.js";
 
 const getIncome = async (req, res) => {
   try {
@@ -116,8 +116,4 @@ const deleteIncome = async (req, res) => {
   }
 };
 
-module.exports = {
-  getIncome,
-  createIncome,
-  deleteIncome,
-};
+export { getIncome, createIncome, deleteIncome };

@@ -1,10 +1,10 @@
-const express = require("express");
-const {
+import express from "express";
+import {
   saveToken,
   getAllTokens,
   deleteToken,
   getTokenByUserId,
-} = require("../controller/FCMTokenController");
+} from "../controller/FCMTokenController.js";
 const router = express.Router();
 
 router.post("/save_token", saveToken);
@@ -12,4 +12,4 @@ router.get("/get_tokens", getAllTokens);
 router.delete("/delete_token", deleteToken);
 router.get("/get_token", getTokenByUserId);
 
-module.exports = { routes: router };
+export const TokenRoutes = router;

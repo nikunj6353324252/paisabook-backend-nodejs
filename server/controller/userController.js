@@ -1,6 +1,6 @@
-const userModel = require("../model/userModel");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+import User from "../model/userModel.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 // Generate JWT token
 const generateToken = (user) => {
@@ -33,8 +33,8 @@ const registerUser = async (req, res) => {
 
     // Check for existing mobile or email
     const [mobileExists, emailExists] = await Promise.all([
-      userModel.findOne({ mobile }),
-      userModel.findOne({ email }),
+      User.findOne({ mobile }),
+      User.findOne({ email }),
     ]);
 
     if (mobileExists) {
@@ -51,7 +51,7 @@ const registerUser = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const newUser = await userModel.create({
+    const newUser = await User.create({
       mobile,
       email,
       password: hashedPassword,
@@ -93,7 +93,7 @@ const loginUser = async (req, res) => {
         .json({ status: false, message: "Mobile and password are required" });
     }
 
-    const user = await userModel.findOne({ mobile });
+    const user = await User.findOne({ mobile });
     if (!user) {
       return res.status(401).json({
         status: false,
@@ -142,7 +142,7 @@ const getUserProfile = async (req, res) => {
         .json({ status: false, message: "User id is required field" });
     }
 
-    const user = await userModel.findById(user_id);
+    const user = await User.findById(user_id);
     if (!user) {
       return res.status(404).json({ status: false, message: "User not found" });
     }
@@ -178,14 +178,14 @@ const updateUserProfile = async (req, res) => {
         .json({ status: false, message: "User ID is required" });
     }
 
-    const user = await userModel.findById(id);
+    const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ status: false, message: "User not found" });
     }
 
     // Check email duplication
     if (email && email !== user.email) {
-      const existingEmail = await userModel.findOne({ email });
+      const existingEmail = await User.findOne({ email });
       if (existingEmail && existingEmail._id.toString() !== id) {
         return res
           .status(409)
@@ -196,7 +196,7 @@ const updateUserProfile = async (req, res) => {
 
     // Check username duplication
     if (user_name && user_name !== user.user_name) {
-      const existingUsername = await userModel.findOne({ user_name });
+      const existingUsername = await User.findOne({ user_name });
       if (existingUsername && existingUsername._id.toString() !== id) {
         return res
           .status(409)
@@ -224,9 +224,4 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
-module.exports = {
-  registerUser,
-  loginUser,
-  getUserProfile,
-  updateUserProfile,
-};
+export { registerUser, loginUser, getUserProfile, updateUserProfile };

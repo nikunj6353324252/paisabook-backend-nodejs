@@ -1,15 +1,15 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const {
+import {
   registerUser,
   loginUser,
   getUserProfile,
   updateUserProfile,
-} = require("../controller/userController");
+} from '../controller/userController.js'
 
 router.post("/register", registerUser);
 router.post("/login", loginUser);
 router.get("/profile", getUserProfile);
 router.put("/update_profile", updateUserProfile);
 
-module.exports = { routes: router };
+export const UserRoutes = router;
