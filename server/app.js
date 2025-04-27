@@ -27,9 +27,9 @@ app.use("/api", authMiddleware, BudgetRoutes);
 app.use("/api", authMiddleware, IncomeRoutes);
 app.use("/api", TokenRoutes);
 
-app.use((req, res) => {
-  res.status(404).json({ message: "Route not found" });
-});
+app.get('/', (req, res) => res.json("server working...."));
+
+app.get('*', (req, res) => res.json("API route not found"));
 
 const PORT = process.env.PORT || 3010;
 app.listen(PORT, "0.0.0.0", () =>
