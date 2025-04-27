@@ -1,8 +1,10 @@
 {
   "type": "module",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js"
+    "build": "mkdir -p dist && cp -r server dist/",
+    "start": "node dist/server/app.js",
+    "dev": "nodemon server/app.js",
+    "vercel-build": "npm run build"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

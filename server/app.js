@@ -1,14 +1,14 @@
 import dotenv from "dotenv";
 import express from "express";
 import path from "path";
-import connectDB from "./server/Config/db.js";
-import { UserRoutes } from "./server/routes/userRoutes.js";
-import { ExpenseRoutes } from "./server/routes/expenseRoutes.js";
-import { BudgetRoutes } from "./server/routes/budgetRoutes.js";
-import { IncomeRoutes } from "./server/routes/incomeRoutes.js";
-import authMiddleware from "./server/middleware/authMiddleware.js";
-import { TokenRoutes } from "./server/routes/FCMTokenRoutes.js";
-import startNotificationScheduler from "./server/PushNotification.js";
+import connectDB from "./Config/db.js";
+import { UserRoutes } from "./routes/userRoutes.js";
+import { ExpenseRoutes } from "./routes/expenseRoutes.js";
+import { BudgetRoutes } from "./routes/budgetRoutes.js";
+import { IncomeRoutes } from "./routes/incomeRoutes.js";
+import authMiddleware from "./middleware/authMiddleware.js";
+import { TokenRoutes } from "./routes/FCMTokenRoutes.js";
+import startNotificationScheduler from "./PushNotification.js";
 
 dotenv.config(); 
 
