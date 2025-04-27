@@ -9,6 +9,7 @@ import { IncomeRoutes } from "./routes/incomeRoutes.js";
 import authMiddleware from "./middleware/authMiddleware.js";
 import { TokenRoutes } from "./routes/FCMTokenRoutes.js";
 import startNotificationScheduler from "./PushNotification.js";
+import cors from "cors";
 
 dotenv.config(); 
 
@@ -17,6 +18,7 @@ connectDB();
 
 startNotificationScheduler(); 
 
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(path.resolve(), "public"))); 
@@ -27,9 +29,9 @@ app.use("/api", authMiddleware, BudgetRoutes);
 app.use("/api", authMiddleware, IncomeRoutes);
 app.use("/api", TokenRoutes);
 
-app.get('/', (req, res) => res.json("server working...."));
+// app.use('/', (req, res) => res.json("server working...."));
 
-app.get('*', (req, res) => res.json("API route not found"));
+// app.use('*', (req, res) => res.json("API route not found"));
 
 const PORT = process.env.PORT || 3010;
 app.listen(PORT, "0.0.0.0", () =>
