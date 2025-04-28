@@ -60,6 +60,7 @@ const deleteToken = async (req, res) => {
 
 const getTokenByUserId = async (req, res) => {
   const { user_id } = req.query;
+  console.log('user_id',user_id)
 
   if (!user_id) {
     return res.status(400).json({ message: "user_id is required in params." });
