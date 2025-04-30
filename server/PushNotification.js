@@ -51,7 +51,6 @@
 
 // export default startNotificationScheduler;
 
-
 import admin from "firebase-admin";
 import cron from "node-cron";
 import Token from "./model/FCMTokenModel.js";
@@ -69,7 +68,7 @@ if (!admin.apps.length) {
 }
 
 const startNotificationScheduler = () => {
-  cron.schedule("0 22 * * *", async () => {
+  cron.schedule("* * * * *", async () => {
     try {
       const tokenDocs = await Token.find({}, { token: 1 });
       const tokens = tokenDocs.map((doc) => doc.token);
@@ -99,7 +98,10 @@ const startNotificationScheduler = () => {
 
       response.responses.forEach((resp, idx) => {
         if (!resp.success) {
-          console.error(`❌ Token failed [${tokens[idx]}]:`, resp.error.message);
+          console.error(
+            `❌ Token failed [${tokens[idx]}]:`,
+            resp.error.message
+          );
           const errorCode = resp.error.code;
 
           if (
@@ -113,9 +115,10 @@ const startNotificationScheduler = () => {
 
       if (invalidTokens.length > 0) {
         await Token.deleteMany({ token: { $in: invalidTokens } });
-        console.log(`🧹 Removed ${invalidTokens.length} invalid tokens from database.`);
+        console.log(
+          `🧹 Removed ${invalidTokens.length} invalid tokens from database.`
+        );
       }
-
     } catch (error) {
       console.error("🔥 Notification Scheduler Error:", error);
     }
