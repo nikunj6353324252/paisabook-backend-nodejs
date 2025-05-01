@@ -11,17 +11,17 @@ import { TokenRoutes } from "./routes/FCMTokenRoutes.js";
 import startNotificationScheduler from "./PushNotification.js";
 import cors from "cors";
 
-dotenv.config(); 
+dotenv.config();
 
 const app = express();
-connectDB(); 
+connectDB();
 
-startNotificationScheduler(); 
+startNotificationScheduler();
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(path.resolve(), "public"))); 
+app.use(express.static(path.join(path.resolve(), "public")));
 
 app.use("/api/auth", UserRoutes);
 app.use("/api", authMiddleware, ExpenseRoutes);
