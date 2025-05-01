@@ -170,7 +170,7 @@ const getUserProfile = async (req, res) => {
 
 const updateUserProfile = async (req, res) => {
   try {
-    const { id, email, user_name,profile_image } = req.body;
+    const { id, email, user_name, profile_image } = req.body;
 
     if (!id) {
       return res
@@ -218,7 +218,7 @@ const updateUserProfile = async (req, res) => {
         id: user._id,
         email: user.email,
         user_name: user.user_name,
-        profile_image: user.profile_image
+        profile_image: user.profile_image,
       },
     });
   } catch (error) {

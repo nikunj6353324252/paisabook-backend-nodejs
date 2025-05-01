@@ -113,6 +113,8 @@ const startNotificationScheduler = () => {
         }
       });
 
+      console.log("invalidTokens", invalidTokens);
+
       if (invalidTokens.length > 0) {
         await Token.deleteMany({ token: { $in: invalidTokens } });
         console.log(
