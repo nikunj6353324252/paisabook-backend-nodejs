@@ -57,10 +57,14 @@ const deleteToken = async (req, res) => {
         .json({ message: "Token not found for the given user." });
     }
 
-    return res.status(200).json({ message: "Token deleted successfully." });
+    return res
+      .status(200)
+      .json({ status: true, message: "Token deleted successfully." });
   } catch (error) {
     console.error("Error deleting token:", error);
-    return res.status(500).json({ message: "Internal server error." });
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal server error." });
   }
 };
 
@@ -80,10 +84,12 @@ const getTokenByUserId = async (req, res) => {
         .json({ message: "No token found for the given user." });
     }
 
-    return res.status(200).json({ token: tokenDoc.token });
+    return res.status(200).json({ status: true, token: tokenDoc.token });
   } catch (error) {
     console.error("Error fetching token by user ID:", error);
-    return res.status(500).json({ message: "Internal server error." });
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal server error." });
   }
 };
 
