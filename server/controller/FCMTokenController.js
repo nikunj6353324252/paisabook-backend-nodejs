@@ -17,10 +17,14 @@ const saveToken = async (req, res) => {
     }
 
     await Token.create({ user_id, token });
-    return res.status(201).json({ message: "Token saved successfully." });
+    return res
+      .status(201)
+      .json({ status: true, message: "Token saved successfully." });
   } catch (error) {
     console.error("Error saving token:", error);
-    return res.status(500).json({ message: "Internal server error." });
+    return res
+      .status(500)
+      .json({ status: false, message: "Internal server error." });
   }
 };
 
