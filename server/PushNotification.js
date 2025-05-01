@@ -76,6 +76,12 @@
 
 // export default startNotificationScheduler;
 
+import admin from "firebase-admin";
+import cron from "node-cron";
+import Token from "./model/FCMTokenModel.js";
+import fs from "fs";
+import path from "path";
+
 const startNotificationScheduler = () => {
   cron.schedule(
     "55 17 * * *", // 5:30 PM
@@ -141,6 +147,8 @@ const startNotificationScheduler = () => {
 
   console.log("✅ Notification scheduler started. Waiting for 5:30 PM IST...");
 };
+
+export default startNotificationScheduler;
 
 // ==> init firebase admin
 
