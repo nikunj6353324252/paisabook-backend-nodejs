@@ -13,7 +13,9 @@ const saveToken = async (req, res) => {
     if (existing) {
       existing.token = token;
       await existing.save();
-      return res.status(200).json({ message: "Token updated successfully." });
+      return res
+        .status(200)
+        .json({ status: true, message: "Token updated successfully." });
     }
 
     await Token.create({ user_id, token });
