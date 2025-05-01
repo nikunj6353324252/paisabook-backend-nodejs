@@ -15,7 +15,7 @@ if (!admin.apps.length) {
 }
 
 const startNotificationScheduler = () => {
-  cron.schedule("* * * * *", async () => {
+  cron.schedule("30 17 * * *", async () => {
     try {
       const tokenDocs = await Token.find({}, { token: 1 });
       const tokens = tokenDocs.map((doc) => doc.token);
