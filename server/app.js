@@ -27,7 +27,7 @@ app.use("/api/auth", UserRoutes);
 app.use("/api", authMiddleware, ExpenseRoutes);
 app.use("/api", authMiddleware, BudgetRoutes);
 app.use("/api", authMiddleware, IncomeRoutes);
-app.use("/api", TokenRoutes);
+app.use("/api", authMiddleware, TokenRoutes);
 
 // app.use('/', (req, res) => res.json("server working...."));
 
