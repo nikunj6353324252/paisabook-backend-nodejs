@@ -81,7 +81,7 @@ const getTokenByUserId = async (req, res) => {
     if (!tokenDoc) {
       return res
         .status(404)
-        .json({ message: "No token found for the given user." });
+        .json({ status: false, message: "No token found for the given user." });
     }
 
     return res.status(200).json({ status: true, token: tokenDoc.token });
