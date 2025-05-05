@@ -135,6 +135,96 @@ const addExpense = async (req, res) => {
   }
 };
 
+const updateExpense = async (req, res) => {
+  try {
+    const { id } = req.query;
+    const {
+      user_id,
+      amount,
+      description = "",
+      date,
+      budget_category = "",
+      attachment_bill = "",
+      max_threshold,
+    } = req.body;
+
+    if (!id || !user_id || !amount || !date) {
+      return res.status(400).json({
+        status: false,
+        message: "Fields 'id', 'user_id', 'amount', and 'date' are required",
+      });
+    }
+
+    const existingExpense = await Expense.findOne({ _id: id, user_id });
+    if (!existingExpense) {
+      return res.status(404).json({
+        status: false,
+        message: "Expense not found or unauthorized",
+      });
+    }
+
+    let usage = 0;
+
+    if (budget_category) {
+      const query = { user_id, budget_category };
+      const budgets = await Budget.find(query).sort({ createdAt: -1 });
+      const budget = budgets[0];
+
+      if (budget) {
+        const oldAmount = parseFloat(existingExpense.amount);
+        const newAmount = parseFloat(amount);
+        const spendDelta = newAmount - oldAmount;
+        const updatedSpend = budget.spend + spendDelta;
+
+        usage = updatedSpend / budget.budget_limit;
+
+        if (updatedSpend > budget.budget_limit) {
+          return res.status(400).json({
+            status: false,
+            message: "Updated expense exceeds budget limit",
+            data: {
+              usage,
+              remain: budget.budget_limit - budget.spend,
+            },
+          });
+        }
+
+        await Budget.findByIdAndUpdate(budget._id, {
+          spend: updatedSpend,
+        });
+      }
+    }
+
+    const updatedExpense = await Expense.findOneAndUpdate(
+      { _id: id, user_id },
+      {
+        amount,
+        description,
+        date,
+        budget_category,
+        attachment_bill,
+        max_threshold,
+      },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      status: true,
+      message: "Expense updated successfully",
+      expense: updatedExpense,
+      usage,
+      max_threshold_alert_visible: usage >= max_threshold,
+    });
+  } catch (error) {
+    console.error("Update expense error:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
 const deleteExpense = async (req, res) => {
   try {
     const { id, user_id, budget_category, amount } = req.query;
@@ -185,4 +275,4 @@ const deleteExpense = async (req, res) => {
   }
 };
 
-export { getExpenses, addExpense, deleteExpense };
+export { getExpenses, addExpense, updateExpense, deleteExpense };
