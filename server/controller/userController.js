@@ -1,6 +1,7 @@
 import User from "../model/userModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import uploadImageBuffer from "../utils/uploadImageBuffer.js";
 
 // Generate JWT token
 const generateToken = (user) => {
@@ -168,9 +169,71 @@ const getUserProfile = async (req, res) => {
 
 // ======================== UPDATE PROFILE ======================== //
 
+// const updateUserProfile = async (req, res) => {
+//   try {
+//     const { id, email, user_name, profile_image } = req.body;
+
+//     if (!id) {
+//       return res
+//         .status(400)
+//         .json({ status: false, message: "User ID is required" });
+//     }
+
+//     const user = await User.findById(id);
+//     if (!user) {
+//       return res.status(404).json({ status: false, message: "User not found" });
+//     }
+
+//     // Check email duplication
+//     if (email && email !== user.email) {
+//       const existingEmail = await User.findOne({ email });
+//       if (existingEmail && existingEmail._id.toString() !== id) {
+//         return res
+//           .status(409)
+//           .json({ status: false, message: "Email already in use" });
+//       }
+//       user.email = email;
+//     }
+
+//     // Check username duplication
+//     if (user_name && user_name !== user.user_name) {
+//       const existingUsername = await User.findOne({ user_name });
+//       if (existingUsername && existingUsername._id.toString() !== id) {
+//         return res
+//           .status(409)
+//           .json({ status: false, message: "Username already in use" });
+//       }
+//       user.user_name = user_name;
+//     }
+
+//     if (profile_image) {
+//       user.profile_image = profile_image;
+//     }
+
+//     await user.save();
+
+//     return res.status(200).json({
+//       status: true,
+//       message: "Profile updated successfully",
+//       user: {
+//         id: user._id,
+//         email: user.email,
+//         user_name: user.user_name,
+//         profile_image: user.profile_image,
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Update profile error:", error);
+//     return res
+//       .status(500)
+//       .json({ status: false, message: "Server error", error: error.message });
+//   }
+// };
+
 const updateUserProfile = async (req, res) => {
   try {
-    const { id, email, user_name, profile_image } = req.body;
+    const { id, email, user_name } = req.body;
+    console.log("body", req.body);
 
     if (!id) {
       return res
@@ -183,7 +246,6 @@ const updateUserProfile = async (req, res) => {
       return res.status(404).json({ status: false, message: "User not found" });
     }
 
-    // Check email duplication
     if (email && email !== user.email) {
       const existingEmail = await User.findOne({ email });
       if (existingEmail && existingEmail._id.toString() !== id) {
@@ -194,7 +256,6 @@ const updateUserProfile = async (req, res) => {
       user.email = email;
     }
 
-    // Check username duplication
     if (user_name && user_name !== user.user_name) {
       const existingUsername = await User.findOne({ user_name });
       if (existingUsername && existingUsername._id.toString() !== id) {
@@ -205,8 +266,14 @@ const updateUserProfile = async (req, res) => {
       user.user_name = user_name;
     }
 
-    if (profile_image) {
-      user.profile_image = profile_image;
+    if (req.file) {
+      const { buffer, originalname, mimetype } = req.file;
+      const uploadedUrl = await uploadImageBuffer(
+        buffer,
+        originalname,
+        mimetype
+      );
+      user.profile_image = uploadedUrl;
     }
 
     await user.save();
