@@ -158,7 +158,6 @@ const updateExpense = async (req, res) => {
     }
 
     if (existingExpense.budget_category !== budget_category) {
-      // Adjust old budget
       if (existingExpense.budget_category) {
         const oldBudget = await Budget.findOne({
           user_id,
@@ -171,7 +170,6 @@ const updateExpense = async (req, res) => {
         }
       }
 
-      // Adjust new budget
       if (budget_category) {
         const newBudget = await Budget.findOne({ user_id, budget_category });
         if (newBudget) {
@@ -208,12 +206,10 @@ const updateExpense = async (req, res) => {
     };
 
     if (req.file) {
-      // Delete old image if exists
       if (existingExpense.attachment_public_id) {
         await cloudinary.uploader.destroy(existingExpense.attachment_public_id);
       }
 
-      // Upload new image
       const base64Image = `data:${
         req.file.mimetype
       };base64,${req.file.buffer.toString("base64")}`;
@@ -246,56 +242,6 @@ const updateExpense = async (req, res) => {
   }
 };
 
-// const deleteExpense = async (req, res) => {
-//   try {
-//     const { id, user_id, budget_category, amount } = req.query;
-
-//     if (!id || !user_id) {
-//       return res.status(400).json({
-//         status: false,
-//         message: "Expense ID and User ID and budget_category are required",
-//       });
-//     }
-
-//     const query = { user_id };
-//     if (budget_category) query.budget_category = budget_category;
-
-//     const budgets = await Budget.find(query).sort({ createdAt: -1 });
-//     const budget = budgets[0];
-
-//     if (budget) {
-//       await Budget.findByIdAndUpdate(budget._id, {
-//         spend: budget?.spend - amount,
-//       });
-//     }
-
-//     const deletedExpense = await Expense.findOneAndDelete({
-//       _id: id,
-//       user_id,
-//     });
-
-//     if (!deletedExpense) {
-//       return res.status(404).json({
-//         status: false,
-//         message: "Expense not found or unauthorized",
-//       });
-//     }
-
-//     return res.status(200).json({
-//       status: true,
-//       message: "Expense deleted successfully",
-//       deletedExpense,
-//     });
-//   } catch (error) {
-//     console.error("Delete expense error:", error);
-//     return res.status(500).json({
-//       status: false,
-//       message: "Server error",
-//       error: error.message,
-//     });
-//   }
-// };
-
 const deleteExpense = async (req, res) => {
   try {
     const { id, user_id, budget_category, amount } = req.query;
@@ -307,7 +253,6 @@ const deleteExpense = async (req, res) => {
       });
     }
 
-    // Find the expense first
     const expense = await Expense.findOne({ _id: id, user_id });
 
     if (!expense) {
@@ -317,12 +262,10 @@ const deleteExpense = async (req, res) => {
       });
     }
 
-    // Delete image from Cloudinary if it exists
     if (expense.attachment_public_id) {
       await cloudinary.uploader.destroy(expense.attachment_public_id);
     }
 
-    // Adjust budget spend if applicable
     if (budget_category) {
       const budgets = await Budget.find({ user_id, budget_category }).sort({
         createdAt: -1,
