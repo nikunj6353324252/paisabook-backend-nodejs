@@ -6,9 +6,10 @@ import {
   getIncome,
   updateIncome,
 } from "../controller/incomeController.js";
+import upload from "../Config/multerConfig.js";
 
-router.post("/income", createIncome);
-router.put("/income", updateIncome);
+router.post("/income", upload.single("attach_reciept"), createIncome);
+router.put("/income", upload.single("attach_reciept"), updateIncome);
 router.get("/income", getIncome);
 router.delete("/income", deleteIncome);
 

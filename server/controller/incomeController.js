@@ -57,12 +57,23 @@ const createIncome = async (req, res) => {
       });
     }
 
+    let uploadedImage = null;
+    if (req.file) {
+      const base64Image = `data:${
+        req.file.mimetype
+      };base64,${req.file.buffer.toString("base64")}`;
+      uploadedImage = await cloudinary.uploader.upload(base64Image, {
+        folder: "income_receipts",
+      });
+    }
+
     const newIncome = await Income.create({
       amount,
       description,
       date,
       income_category,
-      attach_reciept,
+      attach_reciept: uploadedImage?.secure_url || "",
+      attachment_public_id: uploadedImage?.public_id || "",
       user_id,
     });
 
@@ -81,17 +92,82 @@ const createIncome = async (req, res) => {
   }
 };
 
+// const updateIncome = async (req, res) => {
+//   try {
+//     const { id } = req.query;
+//     const {
+//       amount,
+//       description,
+//       date,
+//       income_category,
+//       attach_reciept,
+//       user_id,
+//     } = req.body;
+
+//     if (!id || !user_id || !amount || !date || !income_category) {
+//       return res.status(400).json({
+//         status: false,
+//         message:
+//           "Fields 'id', 'user_id', 'amount', 'date', and 'income_category' are required",
+//       });
+//     }
+
+//     let uploadedImage = null;
+//     if (req.file) {
+//       if (existingExpense.attachment_public_id) {
+//         await cloudinary.uploader.destroy(existingExpense.attachment_public_id);
+//       }
+
+//       const base64Image = `data:${
+//         req.file.mimetype
+//       };base64,${req.file.buffer.toString("base64")}`;
+//       const uploadedImage = await cloudinary.uploader.upload(base64Image, {
+//         folder: "income_receipts",
+//       });
+
+//       updatedData.attachment_bill = uploadedImage.secure_url;
+//       updatedData.attachment_public_id = uploadedImage.public_id;
+//     }
+
+//     const updatedIncome = await Income.findOneAndUpdate(
+//       { _id: id, user_id },
+//       {
+//         amount,
+//         description,
+//         date,
+//         income_category,
+//         attach_reciept: uploadedImage.secure_url || "",
+//         attachment_public_id: uploadedImage.public_id || "",
+//       },
+//       { new: true }
+//     );
+
+//     if (!updatedIncome) {
+//       return res.status(404).json({
+//         status: false,
+//         message: "Income not found or unauthorized",
+//       });
+//     }
+
+//     return res.status(200).json({
+//       status: true,
+//       message: "Income updated successfully",
+//       income: updatedIncome,
+//     });
+//   } catch (error) {
+//     console.error("Update income error:", error);
+//     return res.status(500).json({
+//       status: false,
+//       message: "Server error",
+//       error: error.message,
+//     });
+//   }
+// };
+
 const updateIncome = async (req, res) => {
   try {
     const { id } = req.query;
-    const {
-      amount,
-      description,
-      date,
-      income_category,
-      attach_reciept,
-      user_id,
-    } = req.body;
+    const { amount, description, date, income_category, user_id } = req.body;
 
     if (!id || !user_id || !amount || !date || !income_category) {
       return res.status(400).json({
@@ -101,6 +177,36 @@ const updateIncome = async (req, res) => {
       });
     }
 
+    // Fetch existing income record
+    const existingIncome = await Income.findOne({ _id: id, user_id });
+    if (!existingIncome) {
+      return res.status(404).json({
+        status: false,
+        message: "Income not found or unauthorized",
+      });
+    }
+
+    let attachment_bill = existingIncome.attachment_bill || "";
+    let attachment_public_id = existingIncome.attachment_public_id || "";
+
+    // If a new file is uploaded
+    if (req.file) {
+      // Delete old image from Cloudinary
+      if (attachment_public_id) {
+        await cloudinary.uploader.destroy(attachment_public_id);
+      }
+
+      const base64Image = `data:${
+        req.file.mimetype
+      };base64,${req.file.buffer.toString("base64")}`;
+      const uploadedImage = await cloudinary.uploader.upload(base64Image, {
+        folder: "income_receipts",
+      });
+
+      attachment_bill = uploadedImage.secure_url;
+      attachment_public_id = uploadedImage.public_id;
+    }
+
     const updatedIncome = await Income.findOneAndUpdate(
       { _id: id, user_id },
       {
@@ -108,17 +214,11 @@ const updateIncome = async (req, res) => {
         description,
         date,
         income_category,
-        attach_reciept,
+        attachment_bill,
+        attachment_public_id,
       },
       { new: true }
     );
-
-    if (!updatedIncome) {
-      return res.status(404).json({
-        status: false,
-        message: "Income not found or unauthorized",
-      });
-    }
 
     return res.status(200).json({
       status: true,
@@ -146,18 +246,26 @@ const deleteIncome = async (req, res) => {
       });
     }
 
-    const deletedIncome = await Income.findOneAndDelete({ _id: id, user_id });
-
-    if (!deletedIncome) {
+    // Find the income entry first
+    const existingIncome = await Income.findOne({ _id: id, user_id });
+    if (!existingIncome) {
       return res.status(404).json({
         status: false,
         message: "Income not found or unauthorized",
       });
     }
 
+    // If image exists, delete it from Cloudinary
+    if (existingIncome.attachment_public_id) {
+      await cloudinary.uploader.destroy(existingIncome.attachment_public_id);
+    }
+
+    // Now delete the income entry
+    const deletedIncome = await Income.findOneAndDelete({ _id: id, user_id });
+
     return res.status(200).json({
       status: true,
-      message: "Income deleted successfully",
+      message: "Income and associated image (if any) deleted successfully",
       deletedIncome,
     });
   } catch (error) {
@@ -169,5 +277,40 @@ const deleteIncome = async (req, res) => {
     });
   }
 };
+
+// const deleteIncome = async (req, res) => {
+//   try {
+//     const { id, user_id } = req.query;
+
+//     if (!id || !user_id) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "Income ID and User ID are required",
+//       });
+//     }
+
+//     const deletedIncome = await Income.findOneAndDelete({ _id: id, user_id });
+
+//     if (!deletedIncome) {
+//       return res.status(404).json({
+//         status: false,
+//         message: "Income not found or unauthorized",
+//       });
+//     }
+
+//     return res.status(200).json({
+//       status: true,
+//       message: "Income deleted successfully",
+//       deletedIncome,
+//     });
+//   } catch (error) {
+//     console.error("Delete income error:", error);
+//     return res.status(500).json({
+//       status: false,
+//       message: "Server error",
+//       error: error.message,
+//     });
+//   }
+// };
 
 export { getIncome, createIncome, updateIncome, deleteIncome };
