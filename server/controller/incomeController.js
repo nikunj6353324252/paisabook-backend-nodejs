@@ -187,7 +187,7 @@ const updateIncome = async (req, res) => {
       });
     }
 
-    let attachment_bill = existingIncome.attachment_bill || "";
+    let attach_reciept = existingIncome.attach_reciept || "";
     let attachment_public_id = existingIncome.attachment_public_id || "";
 
     // If a new file is uploaded
@@ -204,7 +204,7 @@ const updateIncome = async (req, res) => {
         folder: "income_receipts",
       });
 
-      attachment_bill = uploadedImage.secure_url;
+      attach_reciept = uploadedImage.secure_url;
       attachment_public_id = uploadedImage.public_id;
     }
 
@@ -215,7 +215,7 @@ const updateIncome = async (req, res) => {
         description,
         date,
         income_category,
-        attachment_bill,
+        attach_reciept,
         attachment_public_id,
       },
       { new: true }
