@@ -22,6 +22,10 @@ const expenseSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    attachment_public_id: {
+      type: String,
+      default: "",
+    },
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

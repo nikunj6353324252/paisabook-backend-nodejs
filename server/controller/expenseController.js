@@ -1,3 +1,4 @@
+import cloudinary from "../Config/CloudinaryConfig.js";
 import Budget from "../model/budgetModel.js";
 import Expense from "../model/expenseModel.js";
 
@@ -46,6 +47,95 @@ const getExpenses = async (req, res) => {
   }
 };
 
+// const addExpense = async (req, res) => {
+//   try {
+//     const {
+//       amount,
+//       description = "",
+//       date,
+//       budget_category = "",
+//       attachment_bill = "",
+//       user_id,
+//       max_threshold,
+//     } = req.body;
+
+//     if (!amount || isNaN(amount)) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "Amount is required and must be a valid number",
+//       });
+//     }
+
+//     if (!date) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "Date is required",
+//       });
+//     }
+
+//     if (!user_id) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "User ID is required",
+//       });
+//     }
+
+//     let usage = 0; // ✅ Initialize here always
+
+//     // 🔁 Only do budget logic if category is provided
+//     if (budget_category) {
+//       const query = { user_id, budget_category };
+//       const budgets = await Budget.find(query).sort({ createdAt: -1 });
+//       const budget = budgets[0];
+
+//       if (budget) {
+//         const updatedSpend = budget.spend + parseFloat(amount);
+//         usage = updatedSpend / budget.budget_limit;
+
+//         if (updatedSpend > budget.budget_limit) {
+//           return res.status(400).json({
+//             status: false,
+//             message: "Expense exceeds budget limit",
+//             data: {
+//               usage,
+//               remain: budget.budget_limit - budget.spend,
+//             },
+//           });
+//         }
+
+//         await Budget.findByIdAndUpdate(budget._id, {
+//           spend: updatedSpend,
+//         });
+//       }
+//     }
+
+//     const newExpense = await Expense.create({
+//       amount,
+//       description,
+//       date,
+//       budget_category,
+//       attachment_bill,
+//       user_id,
+//       max_threshold,
+//     });
+
+//     return res.status(201).json({
+//       status: true,
+//       message: "Expense added successfully",
+//       expense: newExpense,
+//       usage,
+//       max_threshold_alert_visible: usage >= max_threshold,
+//     });
+//   } catch (error) {
+//     console.error("Add Expense error:", error);
+//     return res.status(500).json({
+//       status: false,
+//       message: "Server error",
+//       error: error.message,
+//     });
+//   }
+// };
+
 const addExpense = async (req, res) => {
   try {
     const {
@@ -53,7 +143,6 @@ const addExpense = async (req, res) => {
       description = "",
       date,
       budget_category = "",
-      attachment_bill = "",
       user_id,
       max_threshold,
     } = req.body;
@@ -65,47 +154,41 @@ const addExpense = async (req, res) => {
       });
     }
 
-    if (!date) {
+    if (!date || !user_id) {
       return res.status(400).json({
         status: false,
-        message: "Date is required",
+        message: "Date and User ID are required",
       });
     }
 
-    if (!user_id) {
-      return res.status(400).json({
-        status: false,
-        message: "User ID is required",
-      });
-    }
-
-    let usage = 0; // ✅ Initialize here always
-
-    // 🔁 Only do budget logic if category is provided
+    let usage = 0;
     if (budget_category) {
-      const query = { user_id, budget_category };
-      const budgets = await Budget.find(query).sort({ createdAt: -1 });
+      const budgets = await Budget.find({ user_id, budget_category }).sort({
+        createdAt: -1,
+      });
       const budget = budgets[0];
-
       if (budget) {
         const updatedSpend = budget.spend + parseFloat(amount);
         usage = updatedSpend / budget.budget_limit;
-
         if (updatedSpend > budget.budget_limit) {
           return res.status(400).json({
             status: false,
             message: "Expense exceeds budget limit",
-            data: {
-              usage,
-              remain: budget.budget_limit - budget.spend,
-            },
+            data: { usage, remain: budget.budget_limit - budget.spend },
           });
         }
-
-        await Budget.findByIdAndUpdate(budget._id, {
-          spend: updatedSpend,
-        });
+        await Budget.findByIdAndUpdate(budget._id, { spend: updatedSpend });
       }
+    }
+
+    let uploadedImage = null;
+    if (req.file) {
+      const base64Image = `data:${
+        req.file.mimetype
+      };base64,${req.file.buffer.toString("base64")}`;
+      uploadedImage = await cloudinary.uploader.upload(base64Image, {
+        folder: "expense_bills",
+      });
     }
 
     const newExpense = await Expense.create({
@@ -113,9 +196,10 @@ const addExpense = async (req, res) => {
       description,
       date,
       budget_category,
-      attachment_bill,
       user_id,
       max_threshold,
+      attachment_bill: uploadedImage?.secure_url || "",
+      attachment_public_id: uploadedImage?.public_id || "",
     });
 
     return res.status(201).json({
@@ -127,6 +211,122 @@ const addExpense = async (req, res) => {
     });
   } catch (error) {
     console.error("Add Expense error:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+const updateExpense = async (req, res) => {
+  try {
+    const { id } = req.query;
+    const {
+      user_id,
+      amount,
+      description = "",
+      date,
+      budget_category = "",
+      max_threshold,
+    } = req.body;
+
+    if (!id || !user_id || !amount || !date) {
+      return res.status(400).json({
+        status: false,
+        message: "Fields 'id', 'user_id', 'amount', and 'date' are required",
+      });
+    }
+
+    const existingExpense = await Expense.findOne({ _id: id, user_id });
+    if (!existingExpense) {
+      return res.status(404).json({
+        status: false,
+        message: "Expense not found or unauthorized",
+      });
+    }
+
+    if (existingExpense.budget_category !== budget_category) {
+      // Adjust old budget
+      if (existingExpense.budget_category) {
+        const oldBudget = await Budget.findOne({
+          user_id,
+          budget_category: existingExpense.budget_category,
+        });
+        if (oldBudget) {
+          oldBudget.spend -= parseFloat(existingExpense.amount);
+          oldBudget.spend = Math.max(0, oldBudget.spend);
+          await oldBudget.save();
+        }
+      }
+
+      // Adjust new budget
+      if (budget_category) {
+        const newBudget = await Budget.findOne({ user_id, budget_category });
+        if (newBudget) {
+          newBudget.spend += parseFloat(amount);
+          await newBudget.save();
+        }
+      }
+    } else if (budget_category) {
+      const budget = await Budget.findOne({ user_id, budget_category });
+      if (budget) {
+        const delta = parseFloat(amount) - parseFloat(existingExpense.amount);
+        const updatedSpend = budget.spend + delta;
+        if (updatedSpend > budget.budget_limit) {
+          return res.status(400).json({
+            status: false,
+            message: "Updated expense exceeds budget limit",
+            data: {
+              usage: updatedSpend / budget.budget_limit,
+              remain: budget.budget_limit - updatedSpend,
+            },
+          });
+        }
+        budget.spend = updatedSpend;
+        await budget.save();
+      }
+    }
+
+    let updatedData = {
+      amount,
+      description,
+      date,
+      budget_category,
+      max_threshold,
+    };
+
+    if (req.file) {
+      // Delete old image if exists
+      if (existingExpense.attachment_public_id) {
+        await cloudinary.uploader.destroy(existingExpense.attachment_public_id);
+      }
+
+      // Upload new image
+      const base64Image = `data:${
+        req.file.mimetype
+      };base64,${req.file.buffer.toString("base64")}`;
+      const uploadedImage = await cloudinary.uploader.upload(base64Image, {
+        folder: "expense_bills",
+      });
+
+      updatedData.attachment_bill = uploadedImage.secure_url;
+      updatedData.attachment_public_id = uploadedImage.public_id;
+    }
+
+    const updatedExpense = await Expense.findOneAndUpdate(
+      { _id: id, user_id },
+      updatedData,
+      { new: true }
+    );
+
+    return res.status(200).json({
+      status: true,
+      message: "Expense updated successfully",
+      expense: updatedExpense,
+    });
+  } catch (error) {
+    console.error("Update expense error:", error);
     return res.status(500).json({
       status: false,
       message: "Server error",
@@ -155,6 +355,7 @@ const addExpense = async (req, res) => {
 //       });
 //     }
 
+//     // Find the existing expense
 //     const existingExpense = await Expense.findOne({ _id: id, user_id });
 //     if (!existingExpense) {
 //       return res.status(404).json({
@@ -163,38 +364,64 @@ const addExpense = async (req, res) => {
 //       });
 //     }
 
-//     let usage = 0;
+//     // Handle budget spend adjustment if category changes
+//     if (existingExpense.budget_category !== budget_category) {
+//       // Reduce spend from old budget category
+//       if (existingExpense.budget_category) {
+//         const oldBudget = await Budget.findOne({
+//           user_id,
+//           budget_category: existingExpense.budget_category,
+//         });
 
-//     if (budget_category) {
-//       const query = { user_id, budget_category };
-//       const budgets = await Budget.find(query).sort({ createdAt: -1 });
-//       const budget = budgets[0];
+//         if (oldBudget) {
+//           oldBudget.spend -= parseFloat(existingExpense.amount);
+//           if (oldBudget.spend < 0) oldBudget.spend = 0;
+//           await oldBudget.save();
+//         }
+//       }
+
+//       // Add spend to new budget category
+//       if (budget_category) {
+//         const newBudget = await Budget.findOne({
+//           user_id,
+//           budget_category,
+//         });
+
+//         if (newBudget) {
+//           newBudget.spend += parseFloat(amount);
+//           await newBudget.save();
+//         }
+//       }
+//     } else if (budget_category) {
+//       // Just update the spend within the same category
+//       const budget = await Budget.findOne({
+//         user_id,
+//         budget_category,
+//       });
 
 //       if (budget) {
 //         const oldAmount = parseFloat(existingExpense.amount);
 //         const newAmount = parseFloat(amount);
 //         const spendDelta = newAmount - oldAmount;
+
 //         const updatedSpend = budget.spend + spendDelta;
-
-//         usage = updatedSpend / budget.budget_limit;
-
 //         if (updatedSpend > budget.budget_limit) {
 //           return res.status(400).json({
 //             status: false,
 //             message: "Updated expense exceeds budget limit",
 //             data: {
-//               usage,
-//               remain: budget.budget_limit - budget.spend,
+//               usage: updatedSpend / budget.budget_limit,
+//               remain: budget.budget_limit - updatedSpend,
 //             },
 //           });
 //         }
 
-//         await Budget.findByIdAndUpdate(budget._id, {
-//           spend: updatedSpend,
-//         });
+//         budget.spend = updatedSpend;
+//         await budget.save();
 //       }
 //     }
 
+//     // Update the expense
 //     const updatedExpense = await Expense.findOneAndUpdate(
 //       { _id: id, user_id },
 //       {
@@ -212,8 +439,6 @@ const addExpense = async (req, res) => {
 //       status: true,
 //       message: "Expense updated successfully",
 //       expense: updatedExpense,
-//       usage,
-//       max_threshold_alert_visible: usage >= max_threshold,
 //     });
 //   } catch (error) {
 //     console.error("Update expense error:", error);
@@ -224,121 +449,6 @@ const addExpense = async (req, res) => {
 //     });
 //   }
 // };
-
-const updateExpense = async (req, res) => {
-  try {
-    const { id } = req.query;
-    const {
-      user_id,
-      amount,
-      description = "",
-      date,
-      budget_category = "",
-      attachment_bill = "",
-      max_threshold,
-    } = req.body;
-
-    if (!id || !user_id || !amount || !date) {
-      return res.status(400).json({
-        status: false,
-        message: "Fields 'id', 'user_id', 'amount', and 'date' are required",
-      });
-    }
-
-    // Find the existing expense
-    const existingExpense = await Expense.findOne({ _id: id, user_id });
-    if (!existingExpense) {
-      return res.status(404).json({
-        status: false,
-        message: "Expense not found or unauthorized",
-      });
-    }
-
-    // Handle budget spend adjustment if category changes
-    if (existingExpense.budget_category !== budget_category) {
-      // Reduce spend from old budget category
-      if (existingExpense.budget_category) {
-        const oldBudget = await Budget.findOne({
-          user_id,
-          budget_category: existingExpense.budget_category,
-        });
-
-        if (oldBudget) {
-          oldBudget.spend -= parseFloat(existingExpense.amount);
-          if (oldBudget.spend < 0) oldBudget.spend = 0;
-          await oldBudget.save();
-        }
-      }
-
-      // Add spend to new budget category
-      if (budget_category) {
-        const newBudget = await Budget.findOne({
-          user_id,
-          budget_category,
-        });
-
-        if (newBudget) {
-          newBudget.spend += parseFloat(amount);
-          await newBudget.save();
-        }
-      }
-    } else if (budget_category) {
-      // Just update the spend within the same category
-      const budget = await Budget.findOne({
-        user_id,
-        budget_category,
-      });
-
-      if (budget) {
-        const oldAmount = parseFloat(existingExpense.amount);
-        const newAmount = parseFloat(amount);
-        const spendDelta = newAmount - oldAmount;
-
-        const updatedSpend = budget.spend + spendDelta;
-        if (updatedSpend > budget.budget_limit) {
-          return res.status(400).json({
-            status: false,
-            message: "Updated expense exceeds budget limit",
-            data: {
-              usage: updatedSpend / budget.budget_limit,
-              remain: budget.budget_limit - updatedSpend,
-            },
-          });
-        }
-
-        budget.spend = updatedSpend;
-        await budget.save();
-      }
-    }
-
-    // Update the expense
-    const updatedExpense = await Expense.findOneAndUpdate(
-      { _id: id, user_id },
-      {
-        amount,
-        description,
-        date,
-        budget_category,
-        attachment_bill,
-        max_threshold,
-      },
-      { new: true }
-    );
-
-    return res.status(200).json({
-      status: true,
-      message: "Expense updated successfully",
-      expense: updatedExpense,
-    });
-  } catch (error) {
-    console.error("Update expense error:", error);
-    return res.status(500).json({
-      status: false,
-      message: "Server error",
-      error: error.message,
-    });
-  }
-};
 
 const deleteExpense = async (req, res) => {
   try {
