@@ -1,3 +1,4 @@
+import cloudinary from "../Config/CloudinaryConfig.js";
 import Income from "../model/incomeModel.js";
 
 const getIncome = async (req, res) => {
