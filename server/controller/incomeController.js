@@ -247,7 +247,6 @@ const deleteIncome = async (req, res) => {
       });
     }
 
-    // Find the income entry first
     const existingIncome = await Income.findOne({ _id: id, user_id });
     if (!existingIncome) {
       return res.status(404).json({
@@ -256,12 +255,10 @@ const deleteIncome = async (req, res) => {
       });
     }
 
-    // If image exists, delete it from Cloudinary
     if (existingIncome.attachment_public_id) {
       await cloudinary.uploader.destroy(existingIncome.attachment_public_id);
     }
 
-    // Now delete the income entry
     const deletedIncome = await Income.findOneAndDelete({ _id: id, user_id });
 
     return res.status(200).json({
