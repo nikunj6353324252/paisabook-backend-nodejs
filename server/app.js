@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import express from "express";
 import path from "path";
-import connectDB from "./Config/db.js";
+import connectDB from "./Config/dbConfig.js";
 import { UserRoutes } from "./routes/userRoutes.js";
 import { ExpenseRoutes } from "./routes/expenseRoutes.js";
 import { BudgetRoutes } from "./routes/budgetRoutes.js";

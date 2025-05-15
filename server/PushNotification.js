@@ -83,7 +83,7 @@
 // export default startNotificationScheduler;
 
 import cron from "node-cron";
-import { admin } from "./utils/firebaseAdmin.js";
+import { admin } from "./Config/firebaseAdminConfig.js";
 import Token from "./model/FCMTokenModel.js";
 
 const startNotificationScheduler = () => {

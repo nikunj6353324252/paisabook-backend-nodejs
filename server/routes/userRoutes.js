@@ -1,15 +1,12 @@
 import express from "express";
 const router = express.Router();
-import multer from "multer";
 import {
   registerUser,
   loginUser,
   getUserProfile,
   updateUserProfile,
 } from "../controller/userController.js";
-
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+import upload from "../Config/multerConfig.js";
 
 router.post("/register", registerUser);
 router.post("/login", loginUser);
