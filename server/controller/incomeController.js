@@ -42,14 +42,7 @@ const getIncome = async (req, res) => {
 
 const createIncome = async (req, res) => {
   try {
-    const {
-      amount,
-      description,
-      date,
-      income_category,
-      attach_reciept,
-      user_id,
-    } = req.body;
+    const { amount, description, date, income_category, user_id } = req.body;
 
     if (!amount || !date || !income_category || !user_id) {
       return res.status(400).json({
