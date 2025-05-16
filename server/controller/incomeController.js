@@ -85,7 +85,7 @@ const createIncome = async (req, res) => {
       uploadedFile = await cloudinary.uploader.upload(base64File, {
         folder: "income_receipts",
         resource_type: fileMimeType === "application/pdf" ? "raw" : "auto",
-        public_id: fileName.replace(/\.[^/.]+$/, ""), // removes the extension since Cloudinary will auto-add .pdf for raw
+        public_id: fileName.replace(/\.[^/.]+$/, ""),
         use_filename: true,
         unique_filename: false,
       });
@@ -98,6 +98,7 @@ const createIncome = async (req, res) => {
       income_category,
       attach_reciept: uploadedFile?.secure_url || "",
       attachment_public_id: uploadedFile?.public_id || "",
+      isImage: req.file.mimetype === "application/pdf" ? false : true,
       user_id,
     });
 
@@ -265,6 +266,7 @@ const updateIncome = async (req, res) => {
         income_category,
         attach_reciept,
         attachment_public_id,
+        isImage: req.file.mimetype === "application/pdf" ? false : true,
       },
       { new: true }
     );
@@ -345,7 +347,7 @@ const deleteIncome = async (req, res) => {
 
     if (existingIncome.attachment_public_id) {
       await cloudinary.uploader.destroy(existingIncome.attachment_public_id, {
-        resource_type: "raw",
+        resource_type: existingIncome?.isImage ? "auto" : "raw",
       });
     }
 

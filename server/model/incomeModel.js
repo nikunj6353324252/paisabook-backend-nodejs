@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { type } from "os";
 
 const incomeSchema = new mongoose.Schema(
   {
@@ -25,6 +26,10 @@ const incomeSchema = new mongoose.Schema(
     attachment_public_id: {
       type: String,
       default: "",
+    },
+    isImage: {
+      type: Boolean,
+      default: false,
     },
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
