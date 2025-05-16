@@ -88,8 +88,8 @@ const createIncome = async (req, res) => {
       description,
       date,
       income_category,
-      attach_reciept: uploadedImage?.secure_url || "",
-      attachment_public_id: uploadedImage?.public_id || "",
+      attach_reciept: uploadedFile?.secure_url || "",
+      attachment_public_id: uploadedFile?.public_id || "",
       user_id,
     });
 
