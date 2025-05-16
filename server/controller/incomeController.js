@@ -345,12 +345,14 @@ const deleteIncome = async (req, res) => {
       });
     }
 
+    // Delete file from Cloudinary if it exists
     if (existingIncome.attachment_public_id) {
       await cloudinary.uploader.destroy(existingIncome.attachment_public_id, {
-        resource_type: existingIncome?.isImage ? "Image" : "raw",
+        resource_type: existingIncome.isImage ? "image" : "raw", // handle PDFs and images correctly
       });
     }
 
+    // Delete the income record
     const deletedIncome = await Income.findOneAndDelete({ _id: id, user_id });
 
     return res.status(200).json({
@@ -367,5 +369,47 @@ const deleteIncome = async (req, res) => {
     });
   }
 };
+
+// const deleteIncome = async (req, res) => {
+//   try {
+//     const { id, user_id } = req.query;
+
+//     if (!id || !user_id) {
+//       return res.status(400).json({
+//         status: false,
+//         message: "Income ID and User ID are required",
+//       });
+//     }
+
+//     const existingIncome = await Income.findOne({ _id: id, user_id });
+//     if (!existingIncome) {
+//       return res.status(404).json({
+//         status: false,
+//         message: "Income not found or unauthorized",
+//       });
+//     }
+
+//     if (existingIncome.attachment_public_id) {
+//       await cloudinary.uploader.destroy(existingIncome.attachment_public_id, {
+//         resource_type: existingIncome?.isImage ? "Image" : "raw",
+//       });
+//     }
+
+//     const deletedIncome = await Income.findOneAndDelete({ _id: id, user_id });
+
+//     return res.status(200).json({
+//       status: true,
+//       message: "Income and associated file deleted successfully",
+//       deletedIncome,
+//     });
+//   } catch (error) {
+//     console.error("Delete income error:", error);
+//     return res.status(500).json({
+//       status: false,
+//       message: "Server error",
+//       error: error.message,
+//     });
+//   }
+// };
 
 export { getIncome, createIncome, updateIncome, deleteIncome };
