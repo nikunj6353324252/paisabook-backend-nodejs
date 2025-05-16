@@ -1,5 +1,6 @@
 import cloudinary from "../Config/CloudinaryConfig.js";
 import Income from "../model/incomeModel.js";
+import path from "path";
 
 const getIncome = async (req, res) => {
   try {
