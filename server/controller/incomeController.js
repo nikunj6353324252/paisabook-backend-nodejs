@@ -347,7 +347,7 @@ const deleteIncome = async (req, res) => {
 
     if (existingIncome.attachment_public_id) {
       await cloudinary.uploader.destroy(existingIncome.attachment_public_id, {
-        resource_type: existingIncome?.isImage ? "auto" : "raw",
+        resource_type: existingIncome?.isImage ? "Image" : "raw",
       });
     }
 
