@@ -94,8 +94,8 @@ const createIncome = async (req, res) => {
 
       uploadedFile = await cloudinary.uploader.upload(base64File, {
         folder: "income_receipts",
-        resource_type: fileMimeType === "application/pdf" ? "raw" : "auto",
-        public_id: fileName.replace(/\.[^/.]+$/, ""), // removes the extension since Cloudinary will auto-add .pdf for raw
+        resource_type: "auto",
+        public_id: fileName.replace(/\.[^/.]+$/, ""),
         use_filename: true,
         unique_filename: false,
       });
