@@ -72,14 +72,38 @@ const createIncome = async (req, res) => {
     if (req.file) {
       const fileBuffer = req.file.buffer;
       const fileMimeType = req.file.mimetype;
+      const originalName = req.file.originalname;
+      const fileExt = path.extname(originalName); // e.g., .pdf, .jpg
+
+      const allowedMimeTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/jpg",
+        "image/webp",
+        "application/pdf",
+      ];
+
+      if (!allowedMimeTypes.includes(fileMimeType)) {
+        return res.status(400).json({
+          status: false,
+          message: "Only image and PDF files are allowed",
+        });
+      }
 
       const base64File = `data:${fileMimeType};base64,${fileBuffer.toString(
         "base64"
       )}`;
 
+      const fileName = `${Date.now()}_${Math.floor(
+        Math.random() * 1000
+      )}${fileExt}`;
+
       uploadedFile = await cloudinary.uploader.upload(base64File, {
         folder: "income_receipts",
         resource_type: fileMimeType === "application/pdf" ? "raw" : "auto",
+        public_id: fileName.replace(/\.[^/.]+$/, ""), // removes the extension since Cloudinary will auto-add .pdf for raw
+        use_filename: true,
+        unique_filename: false,
       });
     }
 
