@@ -58,13 +58,28 @@ const createIncome = async (req, res) => {
       });
     }
 
-    let uploadedImage = null;
+    // let uploadedImage = null;
+    // if (req.file) {
+    //   const base64Image = `data:${
+    //     req.file.mimetype
+    //   };base64,${req.file.buffer.toString("base64")}`;
+    //   uploadedImage = await cloudinary.uploader.upload(base64Image, {
+    //     folder: "income_receipts",
+    //   });
+    // }
+
+    let uploadedFile = null;
     if (req.file) {
-      const base64Image = `data:${
-        req.file.mimetype
-      };base64,${req.file.buffer.toString("base64")}`;
-      uploadedImage = await cloudinary.uploader.upload(base64Image, {
+      const fileBuffer = req.file.buffer;
+      const fileMimeType = req.file.mimetype;
+
+      const base64File = `data:${fileMimeType};base64,${fileBuffer.toString(
+        "base64"
+      )}`;
+
+      uploadedFile = await cloudinary.uploader.upload(base64File, {
         folder: "income_receipts",
+        resource_type: fileMimeType === "application/pdf" ? "raw" : "auto",
       });
     }
 
