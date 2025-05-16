@@ -102,8 +102,8 @@ const createIncome = async (req, res) => {
     console.error("Create income error:", error);
     return res.status(500).json({
       status: false,
-      message: "Server error",
-      error: error.message,
+      message: error.message,
+      //   error: error.message,
     });
   }
 };
