@@ -140,17 +140,17 @@ const updateIncome = async (req, res) => {
     let attach_reciept = existingIncome.attach_reciept || "";
     let attachment_public_id = existingIncome.attachment_public_id || "";
 
+    const fileBuffer = req.file.buffer;
+    const fileMimeType = req.file.mimetype;
+    const originalName = req.file.originalname;
+    const fileExt = path.extname(originalName);
+
     if (req.file) {
       if (attachment_public_id) {
         await cloudinary.uploader.destroy(attachment_public_id, {
-          resource_type: "raw",
+          resource_type: fileMimeType === "application/pdf" ? "raw" : "auto",
         });
       }
-
-      const fileBuffer = req.file.buffer;
-      const fileMimeType = req.file.mimetype;
-      const originalName = req.file.originalname;
-      const fileExt = path.extname(originalName);
 
       const allowedMimeTypes = [
         "image/jpeg",

@@ -92,13 +92,52 @@ const addExpense = async (req, res) => {
       }
     }
 
-    let uploadedImage = null;
+    // let uploadedImage = null;
+    // if (req.file) {
+    //   const base64Image = `data:${
+    //     req.file.mimetype
+    //   };base64,${req.file.buffer.toString("base64")}`;
+    //   uploadedImage = await cloudinary.uploader.upload(base64Image, {
+    //     folder: "expense_bills",
+    //   });
+    // }
+
+    let uploadedFile = null;
     if (req.file) {
-      const base64Image = `data:${
-        req.file.mimetype
-      };base64,${req.file.buffer.toString("base64")}`;
-      uploadedImage = await cloudinary.uploader.upload(base64Image, {
+      const fileBuffer = req.file.buffer;
+      const fileMimeType = req.file.mimetype;
+      const originalName = req.file.originalname;
+      const fileExt = path.extname(originalName);
+
+      const allowedMimeTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/jpg",
+        "image/webp",
+        "application/pdf",
+      ];
+
+      if (!allowedMimeTypes.includes(fileMimeType)) {
+        return res.status(400).json({
+          status: false,
+          message: "Only image and PDF files are allowed",
+        });
+      }
+
+      const base64File = `data:${fileMimeType};base64,${fileBuffer.toString(
+        "base64"
+      )}`;
+
+      const fileName = `${Date.now()}_${Math.floor(
+        Math.random() * 1000
+      )}${fileExt}`;
+
+      uploadedFile = await cloudinary.uploader.upload(base64File, {
         folder: "expense_bills",
+        resource_type: fileMimeType === "application/pdf" ? "raw" : "auto",
+        public_id: fileName.replace(/\.[^/.]+$/, ""),
+        use_filename: true,
+        unique_filename: false,
       });
     }
 
@@ -109,8 +148,9 @@ const addExpense = async (req, res) => {
       budget_category,
       user_id,
       max_threshold,
-      attachment_bill: uploadedImage?.secure_url || "",
-      attachment_public_id: uploadedImage?.public_id || "",
+      isImage: req.file.mimetype === "application/pdf" ? false : true,
+      attachment_bill: uploadedFile?.secure_url || "",
+      attachment_public_id: uploadedFile?.public_id || "",
     });
 
     return res.status(201).json({
@@ -157,31 +197,44 @@ const updateExpense = async (req, res) => {
       });
     }
 
-    if (existingExpense.budget_category !== budget_category) {
-      if (existingExpense.budget_category) {
+    const oldCategory = existingExpense.budget_category;
+    const newCategory = budget_category;
+
+    const oldAmount = parseFloat(existingExpense.amount);
+    const newAmount = parseFloat(amount);
+
+    // Handle category change
+    if (oldCategory !== newCategory) {
+      if (oldCategory) {
         const oldBudget = await Budget.findOne({
           user_id,
-          budget_category: existingExpense.budget_category,
+          budget_category: oldCategory,
         });
         if (oldBudget) {
-          oldBudget.spend -= parseFloat(existingExpense.amount);
-          oldBudget.spend = Math.max(0, oldBudget.spend);
+          oldBudget.spend = Math.max(0, oldBudget.spend - oldAmount);
           await oldBudget.save();
         }
       }
 
-      if (budget_category) {
-        const newBudget = await Budget.findOne({ user_id, budget_category });
+      if (newCategory) {
+        const newBudget = await Budget.findOne({
+          user_id,
+          budget_category: newCategory,
+        });
         if (newBudget) {
-          newBudget.spend += parseFloat(amount);
+          newBudget.spend += newAmount;
           await newBudget.save();
         }
       }
-    } else if (budget_category) {
-      const budget = await Budget.findOne({ user_id, budget_category });
+    } else if (newCategory) {
+      const budget = await Budget.findOne({
+        user_id,
+        budget_category: newCategory,
+      });
       if (budget) {
-        const delta = parseFloat(amount) - parseFloat(existingExpense.amount);
+        const delta = newAmount - oldAmount;
         const updatedSpend = budget.spend + delta;
+
         if (updatedSpend > budget.budget_limit) {
           return res.status(400).json({
             status: false,
@@ -192,33 +245,73 @@ const updateExpense = async (req, res) => {
             },
           });
         }
+
         budget.spend = updatedSpend;
         await budget.save();
       }
     }
 
+    // Prepare update payload
     let updatedData = {
-      amount,
+      amount: newAmount,
       description,
       date,
-      budget_category,
+      budget_category: newCategory,
       max_threshold,
+      isImage: req.file.mimetype === "application/pdf" ? false : true,
     };
 
+    // Handle file upload (if any)
+    let attach_reciept = existingExpense.attach_reciept || "";
+    let attachment_public_id = existingExpense.attachment_public_id || "";
+
+    const fileBuffer = req.file.buffer;
+    const fileMimeType = req.file.mimetype;
+    const originalName = req.file.originalname;
+    const fileExt = path.extname(originalName);
+
     if (req.file) {
-      if (existingExpense.attachment_public_id) {
-        await cloudinary.uploader.destroy(existingExpense.attachment_public_id);
+      if (attachment_public_id) {
+        await cloudinary.uploader.destroy(attachment_public_id, {
+          resource_type: fileMimeType === "application/pdf" ? "raw" : "auto",
+        });
       }
 
-      const base64Image = `data:${
-        req.file.mimetype
-      };base64,${req.file.buffer.toString("base64")}`;
-      const uploadedImage = await cloudinary.uploader.upload(base64Image, {
+      const allowedMimeTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/jpg",
+        "image/webp",
+        "application/pdf",
+      ];
+
+      if (!allowedMimeTypes.includes(fileMimeType)) {
+        return res.status(400).json({
+          status: false,
+          message: "Only image and PDF files are allowed",
+        });
+      }
+
+      const base64File = `data:${fileMimeType};base64,${fileBuffer.toString(
+        "base64"
+      )}`;
+      const fileName = `${Date.now()}_${Math.floor(
+        Math.random() * 1000
+      )}${fileExt}`;
+
+      const uploadedFile = await cloudinary.uploader.upload(base64File, {
         folder: "expense_bills",
+        resource_type: fileMimeType === "application/pdf" ? "raw" : "auto",
+        public_id: fileName.replace(/\.[^/.]+$/, ""),
+        use_filename: true,
+        unique_filename: false,
       });
 
-      updatedData.attachment_bill = uploadedImage.secure_url;
-      updatedData.attachment_public_id = uploadedImage.public_id;
+      attach_reciept = uploadedFile.secure_url;
+      attachment_public_id = uploadedFile.public_id;
+
+      updatedData.attach_reciept = attach_reciept;
+      updatedData.attachment_public_id = attachment_public_id;
     }
 
     const updatedExpense = await Expense.findOneAndUpdate(
@@ -263,7 +356,9 @@ const deleteExpense = async (req, res) => {
     }
 
     if (expense.attachment_public_id) {
-      await cloudinary.uploader.destroy(expense.attachment_public_id);
+      await cloudinary.uploader.destroy(expense.attachment_public_id, {
+        resource_type: expense.isImage ? "image" : "raw",
+      });
     }
 
     if (budget_category) {

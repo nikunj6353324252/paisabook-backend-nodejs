@@ -26,6 +26,10 @@ const expenseSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    isImage: {
+      type: Boolean,
+      default: false,
+    },
     user_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
