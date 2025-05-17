@@ -241,7 +241,6 @@ const updateIncome = async (req, res) => {
     let attachment_public_id = existingIncome.attachment_public_id || "";
     let isImage = existingIncome.isImage || false;
 
-    // Handle file if uploaded
     if (req.file) {
       const fileBuffer = req.file.buffer;
       const fileMimeType = req.file.mimetype;
@@ -263,7 +262,6 @@ const updateIncome = async (req, res) => {
         });
       }
 
-      // Destroy previous file
       if (attachment_public_id) {
         await cloudinary.uploader.destroy(attachment_public_id, {
           resource_type: isImage ? "image" : "raw",
