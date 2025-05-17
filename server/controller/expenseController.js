@@ -427,7 +427,7 @@ const updateExpense = async (req, res) => {
         : existingExpense.isImage,
     };
 
-    let attach_reciept = existingExpense.attach_reciept || "";
+    let attachment_bill = existingExpense.attachment_bill || "";
     let attachment_public_id = existingExpense.attachment_public_id || "";
     let isImage = existingExpense.isImage || false;
 
@@ -473,11 +473,11 @@ const updateExpense = async (req, res) => {
         unique_filename: false,
       });
 
-      attach_reciept = uploadedFile.secure_url;
+      attachment_bill = uploadedFile.secure_url;
       attachment_public_id = uploadedFile.public_id;
       isImage = fileMimeType !== "application/pdf";
 
-      updatedData.attach_reciept = attach_reciept;
+      updatedData.attachment_bill = attachment_bill;
       updatedData.attachment_public_id = attachment_public_id;
       updatedData.isImage = isImage;
     }
