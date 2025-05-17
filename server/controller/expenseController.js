@@ -1,6 +1,7 @@
 import cloudinary from "../Config/CloudinaryConfig.js";
 import Budget from "../model/budgetModel.js";
 import Expense from "../model/expenseModel.js";
+import path from "path";
 
 const getExpenses = async (req, res) => {
   try {
