@@ -22,7 +22,7 @@ const getIncome = async (req, res) => {
       });
     } else {
       const filter = user_id ? { user_id } : {};
-      const incomes = await Income.find(filter).sort({ date: -1 });
+      const incomes = await Income.find(filter).sort({ createdAt: -1 });
 
       return res.status(200).json({
         status: true,
