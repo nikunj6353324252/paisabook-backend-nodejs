@@ -273,7 +273,7 @@ const updateExpense = async (req, res) => {
     if (req.file) {
       if (attachment_public_id) {
         await cloudinary.uploader.destroy(attachment_public_id, {
-          resource_type: fileMimeType === "application/pdf" ? "raw" : "auto",
+          resource_type: fileMimeType === "application/pdf" ? "raw" : "image",
         });
       }
 
