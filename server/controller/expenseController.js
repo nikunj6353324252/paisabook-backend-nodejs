@@ -139,7 +139,11 @@ const addExpense = async (req, res) => {
       budget_category,
       user_id,
       max_threshold,
-      isImage: req.file.mimetype === "application/pdf" ? false : true,
+      isImage: req.file
+        ? req.file?.mimetype === "application/pdf"
+          ? false
+          : true
+        : false,
       attachment_bill: uploadedFile?.secure_url || "",
       attachment_public_id: uploadedFile?.public_id || "",
     });

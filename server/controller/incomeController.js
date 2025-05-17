@@ -98,7 +98,11 @@ const createIncome = async (req, res) => {
       income_category,
       attach_reciept: uploadedFile?.secure_url || "",
       attachment_public_id: uploadedFile?.public_id || "",
-      isImage: req.file.mimetype === "application/pdf" ? false : true,
+      isImage: req.file
+        ? req.file?.mimetype === "application/pdf"
+          ? false
+          : true
+        : false,
       user_id,
     });
 
