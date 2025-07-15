@@ -84,33 +84,107 @@ const registerUser = async (req, res) => {
 
 // ======================== LOGIN ======================== //
 
+// const loginUser = async (req, res) => {
+//   try {
+//     const { mobile, password } = req.body;
+
+//     if (!mobile || !password) {
+//       return res
+//         .status(400)
+//         .json({ status: false, message: "Mobile and password are required" });
+//     }
+
+//     const user = await User.findOne({ mobile });
+//     if (!user) {
+//       return res.status(401).json({
+//         status: false,
+//         message: "Invalid mobile number or password",
+//       });
+//     }
+
+//     const isMatch = await bcrypt.compare(password, user.password);
+//     if (!isMatch) {
+//       return res.status(401).json({
+//         status: false,
+//         message: "Invalid mobile number or password",
+//       });
+//     }
+
+//     const token = generateToken(user);
+
+//     return res.status(200).json({
+//       status: true,
+//       message: "Login successful",
+//       user: {
+//         id: user._id,
+//         mobile: user.mobile,
+//         email: user.email,
+//         user_name: user.user_name,
+//       },
+//       token,
+//     });
+//   } catch (error) {
+//     console.error("Login error:", error);
+//     return res
+//       .status(500)
+//       .json({ status: false, message: "Server error", error: error.message });
+//   }
+// };
+
 const loginUser = async (req, res) => {
   try {
     const { mobile, password } = req.body;
 
+    console.log("Login request:", { mobile, password });
+
+    // Check if inputs are present
     if (!mobile || !password) {
-      return res
-        .status(400)
-        .json({ status: false, message: "Mobile and password are required" });
+      console.log("Missing mobile or password");
+      return res.status(400).json({
+        status: false,
+        message: "Mobile and password are required",
+      });
     }
 
+    // Try to find user by mobile
     const user = await User.findOne({ mobile });
+    console.log("User found in DB:", user);
+
     if (!user) {
+      console.log("No user found with this mobile");
       return res.status(401).json({
         status: false,
         message: "Invalid mobile number or password",
       });
     }
 
+    // Check if user.password exists
+    if (!user.password) {
+      console.log("User password is missing in DB record");
+      return res.status(401).json({
+        status: false,
+        message: "Invalid mobile number or password",
+      });
+    }
+
+    // Compare password with bcrypt
+    console.log("Checking password...");
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log("Password match result:", isMatch);
+
     if (!isMatch) {
+      console.log("Password mismatch");
       return res.status(401).json({
         status: false,
         message: "Invalid mobile number or password",
       });
     }
 
+    // Everything good, generate token
+    console.log("Password correct. Generating token...");
     const token = generateToken(user);
+
+    console.log("Login successful for user:", user._id);
 
     return res.status(200).json({
       status: true,
@@ -125,9 +199,11 @@ const loginUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Login error:", error);
-    return res
-      .status(500)
-      .json({ status: false, message: "Server error", error: error.message });
+    return res.status(500).json({
+      status: false,
+      message: "Server error",
+      error: error.message,
+    });
   }
 };
 
@@ -249,75 +325,5 @@ const updateUserProfile = async (req, res) => {
 };
 
 export default updateUserProfile;
-
-// const updateUserProfile = async (req, res) => {
-//   try {
-//     const { id, email, user_name } = req.body;
-
-//     if (!id) {
-//       return res
-//         .status(400)
-//         .json({ status: false, message: "User ID is required" });
-//     }
-
-//     const user = await User.findById(id);
-//     if (!user) {
-//       return res.status(404).json({ status: false, message: "User not found" });
-//     }
-
-//     // ✅ Upload image if present
-//     if (req.file) {
-//       const base64Image = `data:${
-//         req.file.mimetype
-//       };base64,${req.file.buffer.toString("base64")}`;
-
-//       const uploadedImage = await cloudinary.uploader.upload(base64Image, {
-//         folder: "profile_images",
-//       });
-
-//       user.profile_image = uploadedImage.secure_url;
-//     }
-
-//     // ✅ Update email
-//     if (email && email !== user.email) {
-//       const existingEmail = await User.findOne({ email });
-//       if (existingEmail && existingEmail._id.toString() !== id) {
-//         return res
-//           .status(409)
-//           .json({ status: false, message: "Email already in use" });
-//       }
-//       user.email = email;
-//     }
-
-//     // ✅ Update username
-//     if (user_name && user_name !== user.user_name) {
-//       const existingUsername = await User.findOne({ user_name });
-//       if (existingUsername && existingUsername._id.toString() !== id) {
-//         return res
-//           .status(409)
-//           .json({ status: false, message: "Username already in use" });
-//       }
-//       user.user_name = user_name;
-//     }
-
-//     await user.save();
-
-//     return res.status(200).json({
-//       status: true,
-//       message: "Profile updated successfully",
-//       user: {
-//         id: user._id,
-//         email: user.email,
-//         user_name: user.user_name,
-//         profile_image: user.profile_image,
-//       },
-//     });
-//   } catch (error) {
-//     console.error("Update profile error:", error);
-//     return res
-//       .status(500)
-//       .json({ status: false, message: "Server error", error: error.message });
-//   }
-// };
 
 export { registerUser, loginUser, getUserProfile, updateUserProfile };
