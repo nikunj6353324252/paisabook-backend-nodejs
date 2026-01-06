@@ -84,58 +84,9 @@ const registerUser = async (req, res) => {
 
 // ======================== LOGIN ======================== //
 
-// const loginUser = async (req, res) => {
-//   try {
-//     const { mobile, password } = req.body;
-
-//     if (!mobile || !password) {
-//       return res
-//         .status(400)
-//         .json({ status: false, message: "Mobile and password are required" });
-//     }
-
-//     const user = await User.findOne({ mobile });
-//     if (!user) {
-//       return res.status(401).json({
-//         status: false,
-//         message: "Invalid mobile number or password",
-//       });
-//     }
-
-//     const isMatch = await bcrypt.compare(password, user.password);
-//     if (!isMatch) {
-//       return res.status(401).json({
-//         status: false,
-//         message: "Invalid mobile number or password",
-//       });
-//     }
-
-//     const token = generateToken(user);
-
-//     return res.status(200).json({
-//       status: true,
-//       message: "Login successful",
-//       user: {
-//         id: user._id,
-//         mobile: user.mobile,
-//         email: user.email,
-//         user_name: user.user_name,
-//       },
-//       token,
-//     });
-//   } catch (error) {
-//     console.error("Login error:", error);
-//     return res
-//       .status(500)
-//       .json({ status: false, message: "Server error", error: error.message });
-//   }
-// };
-
 const loginUser = async (req, res) => {
   try {
     const { mobile, password } = req.body;
-
-    console.log("Login request:", { mobile, password });
 
     // Check if inputs are present
     if (!mobile || !password) {
@@ -154,13 +105,12 @@ const loginUser = async (req, res) => {
       console.log("No user found with this mobile");
       return res.status(401).json({
         status: false,
-        message: "Invalid mobile number or password",
+        message: "Mobile number not registered",
       });
     }
 
     // Check if user.password exists
     if (!user.password) {
-      console.log("User password is missing in DB record");
       return res.status(401).json({
         status: false,
         message: "Invalid mobile number or password",
@@ -168,9 +118,7 @@ const loginUser = async (req, res) => {
     }
 
     // Compare password with bcrypt
-    console.log("Checking password...");
     const isMatch = await bcrypt.compare(password, user.password);
-    console.log("Password match result:", isMatch);
 
     if (!isMatch) {
       console.log("Password mismatch");
@@ -180,11 +128,7 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // Everything good, generate token
-    console.log("Password correct. Generating token...");
     const token = generateToken(user);
-
-    console.log("Login successful for user:", user._id);
 
     return res.status(200).json({
       status: true,
@@ -198,7 +142,6 @@ const loginUser = async (req, res) => {
       token,
     });
   } catch (error) {
-    console.error("Login error:", error.message);
     return res.status(500).json({
       status: false,
       message: "Server error",
