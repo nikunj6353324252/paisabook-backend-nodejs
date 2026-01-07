@@ -13,6 +13,7 @@ import cors from "cors";
 import requireAuth from "./middleware/requireAuth.js";
 import { GroupRoutes } from "./routes/groupRoutes.js";
 import { NotificationRoutes } from "./routes/notificationRoutes.js";
+import { GroupTransactionRoutes } from "./routes/groupTransactionRoutes.js";
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ app.use("/api", authMiddleware, IncomeRoutes);
 app.use("/api", authMiddleware, TokenRoutes);
 app.use("/api", requireAuth, GroupRoutes);
 app.use("/api", requireAuth, NotificationRoutes);
+app.use("/api", requireAuth, GroupTransactionRoutes);
 
 // app.use('/', (req, res) => res.json("server working...."));
 
