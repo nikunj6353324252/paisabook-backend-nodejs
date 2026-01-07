@@ -9,17 +9,68 @@ import { sendError } from "../utils/apiError.js";
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
+// export const listGroups = async (req, res) => {
+//   try {
+//     const userId = req.user.userId;
+//     const memberships = await GroupMember.find({ linkedUserId: userId }).select(
+//       "groupId"
+//     );
+//     const memberGroupIds = memberships.map((member) => member.groupId);
+
+//     const groups = await Group.find({
+//       $or: [{ ownerUserId: userId }, { _id: { $in: memberGroupIds } }],
+//     }).sort({ createdAt: -1 });
+
+//     return res.status(200).json({ groups });
+//   } catch (error) {
+//     return sendError(res, 500, "INTERNAL_ERROR", "Failed to fetch groups");
+//   }
+// };
+
 export const listGroups = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = new mongoose.Types.ObjectId(req.user.userId);
+
+    // groups where user is a member (not owner)
     const memberships = await GroupMember.find({ linkedUserId: userId }).select(
       "groupId"
     );
-    const memberGroupIds = memberships.map((member) => member.groupId);
+    const memberGroupIds = memberships.map((m) => m.groupId);
 
-    const groups = await Group.find({
+    const match = {
       $or: [{ ownerUserId: userId }, { _id: { $in: memberGroupIds } }],
-    }).sort({ createdAt: -1 });
+    };
+
+    const groups = await Group.aggregate([
+      { $match: match },
+
+      // join members
+      {
+        $lookup: {
+          from: "groupmembers", // collection name in mongo (usually plural lowercase)
+          localField: "_id",
+          foreignField: "groupId",
+          as: "members",
+        },
+      },
+
+      // add memberLength
+      {
+        $addFields: {
+          memberLength: { $size: "$members" },
+        },
+      },
+
+      // remove members array (optional)
+      {
+        $project: {
+          members: 0,
+        },
+      },
+
+      // sort latest first
+      { $sort: { createdAt: -1 } },
+    ]);
 
     return res.status(200).json({ groups });
   } catch (error) {
