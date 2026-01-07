@@ -19,7 +19,7 @@ export const listMembers = async (req, res) => {
 
 export const addMember = async (req, res) => {
   try {
-    const { displayName, phone, email, linkedUserId, role } = req.body;
+    const { displayName, phone, linkedUserId, role } = req.body;
 
     if (!displayName || typeof displayName !== "string") {
       return sendError(
@@ -45,14 +45,12 @@ export const addMember = async (req, res) => {
       groupId: req.group._id,
       displayName: displayName.trim(),
       linkedUserId: linkedUserId || null,
-      role: role && ["owner", "admin", "member"].includes(role) ? role : "member",
+      role:
+        role && ["owner", "admin", "member"].includes(role) ? role : "member",
     };
 
     if (phone !== undefined && phone !== null && String(phone).trim() !== "") {
       memberPayload.phone = String(phone).trim();
-    }
-    if (email !== undefined && email !== null && String(email).trim() !== "") {
-      memberPayload.email = String(email).trim().toLowerCase();
     }
 
     const member = await GroupMember.create(memberPayload);
@@ -74,7 +72,7 @@ export const addMember = async (req, res) => {
 export const updateMember = async (req, res) => {
   try {
     const { memberId } = req.params;
-    const { displayName, phone, email, linkedUserId, role } = req.body;
+    const { displayName, phone, linkedUserId, role } = req.body;
 
     if (!isValidObjectId(memberId)) {
       return sendError(res, 400, "VALIDATION_ERROR", "Invalid member id");
@@ -115,10 +113,6 @@ export const updateMember = async (req, res) => {
     if (phone !== undefined) {
       const cleanedPhone = String(phone).trim();
       member.phone = cleanedPhone === "" ? undefined : cleanedPhone;
-    }
-    if (email !== undefined) {
-      const cleanedEmail = String(email).trim().toLowerCase();
-      member.email = cleanedEmail === "" ? undefined : cleanedEmail;
     }
     if (linkedUserId !== undefined) {
       member.linkedUserId = linkedUserId || null;
@@ -169,12 +163,7 @@ export const deleteMember = async (req, res) => {
     }
 
     if (member.role === "owner") {
-      return sendError(
-        res,
-        403,
-        "FORBIDDEN",
-        "Owner member cannot be deleted"
-      );
+      return sendError(res, 403, "FORBIDDEN", "Owner member cannot be deleted");
     }
 
     const splitItemCount = await SplitTransactionItem.countDocuments({

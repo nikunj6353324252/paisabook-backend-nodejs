@@ -10,7 +10,6 @@ const groupMemberSchema = new mongoose.Schema(
     },
     displayName: { type: String, required: true, trim: true },
     phone: { type: String, trim: true },
-    email: { type: String, trim: true, lowercase: true },
     linkedUserId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -27,7 +26,10 @@ const groupMemberSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-groupMemberSchema.index({ groupId: 1, email: 1 }, { unique: true, sparse: true });
+groupMemberSchema.index(
+  { groupId: 1, email: 1 },
+  { unique: true, sparse: true }
+);
 
 const GroupMember = mongoose.model("GroupMember", groupMemberSchema);
 
