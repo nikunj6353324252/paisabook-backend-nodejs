@@ -14,6 +14,10 @@ const parsePositiveAmount = (value) => {
 
 export const createGroupTransaction = async (req, res) => {
   try {
+    if (!req.group?._id) {
+      return sendError(res, 400, "VALIDATION_ERROR", "Group context missing");
+    }
+
     const { amount, note, date } = req.body;
     const parsedAmount = parsePositiveAmount(amount);
 
@@ -53,6 +57,7 @@ export const createGroupTransaction = async (req, res) => {
 
     return res.status(201).json({ transaction });
   } catch (error) {
+    console.log("error", error);
     return sendError(
       res,
       500,
@@ -64,6 +69,10 @@ export const createGroupTransaction = async (req, res) => {
 
 export const listGroupTransactions = async (req, res) => {
   try {
+    if (!req.group?._id) {
+      return sendError(res, 400, "VALIDATION_ERROR", "Group context missing");
+    }
+
     const { page, limit } = req.query;
     const hasPagination = page !== undefined || limit !== undefined;
 
