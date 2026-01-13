@@ -26,6 +26,11 @@ const groupMemberSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+groupMemberSchema.index(
+  { groupId: 1, phone: 1 },
+  { unique: true, sparse: true }
+);
+
 const GroupMember = mongoose.model("GroupMember", groupMemberSchema);
 
 export default GroupMember;

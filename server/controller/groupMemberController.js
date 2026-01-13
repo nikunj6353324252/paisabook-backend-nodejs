@@ -18,14 +18,15 @@ export const listMembers = async (req, res) => {
 
 export const addMember = async (req, res) => {
   try {
-    const { displayName, phone } = req.body;
+    const { displayName, phone, name, memberName } = req.body;
     const groupId = req.group?._id || req.params?.groupId;
+    const resolvedDisplayName = displayName ?? name ?? memberName;
 
     if (!groupId || !isValidObjectId(groupId)) {
       return sendError(res, 400, "VALIDATION_ERROR", "Invalid group id");
     }
 
-    if (!displayName || typeof displayName !== "string") {
+    if (!resolvedDisplayName || typeof resolvedDisplayName !== "string") {
       return sendError(
         res,
         400,
@@ -36,7 +37,7 @@ export const addMember = async (req, res) => {
 
     const memberPayload = {
       groupId,
-      displayName: displayName.trim(),
+      displayName: resolvedDisplayName.trim(),
     };
 
     if (phone !== undefined && phone !== null && String(phone).trim() !== "") {
@@ -53,7 +54,7 @@ export const addMember = async (req, res) => {
         res,
         409,
         "CONFLICT",
-        "Member already exists in the group"
+        "Member phone already exists in the group"
       );
     }
     return sendError(res, 500, "INTERNAL_ERROR", "Failed to add member");
@@ -95,7 +96,7 @@ export const updateMember = async (req, res) => {
         res,
         409,
         "CONFLICT",
-        "Member already exists in the group"
+        "Member phone already exists in the group"
       );
     }
     return sendError(res, 500, "INTERNAL_ERROR", "Failed to update member");
