@@ -16,20 +16,20 @@ const groupMemberSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
-    role: {
-      type: String,
-      enum: ["owner", "admin", "member"],
-      default: "member",
-      required: true,
-    },
+    // role: {
+    //   type: String,
+    //   enum: ["owner", "admin", "member"],
+    //   default: "member",
+    //   required: true,
+    // },
   },
   { timestamps: true }
 );
 
-groupMemberSchema.index(
-  { groupId: 1, phone: 1 },
-  { unique: true, sparse: true }
-);
+// groupMemberSchema.index(
+//   { groupId: 1, phone: 1 },
+//   { unique: true, sparse: true }
+// );
 
 const GroupMember = mongoose.model("GroupMember", groupMemberSchema);
 
