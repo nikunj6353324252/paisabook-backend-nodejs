@@ -41,7 +41,21 @@ export const addMember = async (req, res) => {
     };
 
     if (phone !== undefined && phone !== null && String(phone).trim() !== "") {
-      memberPayload.phone = String(phone).trim();
+      const normalizedPhone = String(phone).trim();
+      memberPayload.phone = normalizedPhone;
+
+      const existingMember = await GroupMember.findOne({
+        groupId,
+        phone: normalizedPhone,
+      }).select("_id");
+      if (existingMember) {
+        return sendError(
+          res,
+          409,
+          "CONFLICT",
+          "Member phone already exists in the group"
+        );
+      }
     }
 
     const member = await GroupMember.create(memberPayload);
