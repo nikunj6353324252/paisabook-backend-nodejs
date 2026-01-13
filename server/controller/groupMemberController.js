@@ -18,7 +18,7 @@ export const listMembers = async (req, res) => {
 
 export const addMember = async (req, res) => {
   try {
-    const { displayName, phone } = req.body;
+    const { displayName, phone, groupId } = req.body;
 
     if (!displayName || typeof displayName !== "string") {
       return sendError(
@@ -30,7 +30,7 @@ export const addMember = async (req, res) => {
     }
 
     const memberPayload = {
-      groupId: req.group._id,
+      groupId: groupId,
       displayName: displayName.trim(),
     };
 
@@ -42,6 +42,7 @@ export const addMember = async (req, res) => {
 
     return res.status(201).json({ member });
   } catch (error) {
+    console.log("error", error);
     if (error?.code === 11000) {
       return sendError(
         res,
