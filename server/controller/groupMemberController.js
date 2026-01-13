@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 import GroupMember from "../model/groupMemberModel.js";
 import SplitTransactionItem from "../model/splitTransactionItemModel.js";
-import User from "../model/userModel.js";
 import { sendError } from "../utils/apiError.js";
 
 const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
@@ -19,7 +18,7 @@ export const listMembers = async (req, res) => {
 
 export const addMember = async (req, res) => {
   try {
-    const { displayName, phone, linkedUserId, role } = req.body;
+    const { displayName, phone } = req.body;
 
     if (!displayName || typeof displayName !== "string") {
       return sendError(
@@ -30,23 +29,9 @@ export const addMember = async (req, res) => {
       );
     }
 
-    if (linkedUserId && !isValidObjectId(linkedUserId)) {
-      return sendError(res, 400, "VALIDATION_ERROR", "Invalid linked user id");
-    }
-
-    if (linkedUserId) {
-      const userExists = await User.exists({ _id: linkedUserId });
-      if (!userExists) {
-        return sendError(res, 404, "NOT_FOUND", "Linked user not found");
-      }
-    }
-
     const memberPayload = {
       groupId: req.group._id,
       displayName: displayName.trim(),
-      linkedUserId: linkedUserId || null,
-      role:
-        role && ["owner", "admin", "member"].includes(role) ? role : "member",
     };
 
     if (phone !== undefined && phone !== null && String(phone).trim() !== "") {
@@ -62,7 +47,7 @@ export const addMember = async (req, res) => {
         res,
         409,
         "CONFLICT",
-        "Member email already exists in the group"
+        "Member already exists in the group"
       );
     }
     return sendError(res, 500, "INTERNAL_ERROR", "Failed to add member");
@@ -72,7 +57,7 @@ export const addMember = async (req, res) => {
 export const updateMember = async (req, res) => {
   try {
     const { memberId } = req.params;
-    const { displayName, phone, linkedUserId, role } = req.body;
+    const { displayName, phone } = req.body;
 
     if (!isValidObjectId(memberId)) {
       return sendError(res, 400, "VALIDATION_ERROR", "Invalid member id");
@@ -87,46 +72,12 @@ export const updateMember = async (req, res) => {
       return sendError(res, 404, "NOT_FOUND", "Member not found");
     }
 
-    if (member.role === "owner" && !req.isGroupOwner) {
-      return sendError(
-        res,
-        403,
-        "FORBIDDEN",
-        "Only owner can update this member"
-      );
-    }
-
-    if (linkedUserId && !isValidObjectId(linkedUserId)) {
-      return sendError(res, 400, "VALIDATION_ERROR", "Invalid linked user id");
-    }
-
-    if (linkedUserId) {
-      const userExists = await User.exists({ _id: linkedUserId });
-      if (!userExists) {
-        return sendError(res, 404, "NOT_FOUND", "Linked user not found");
-      }
-    }
-
     if (displayName !== undefined) {
       member.displayName = String(displayName).trim();
     }
     if (phone !== undefined) {
       const cleanedPhone = String(phone).trim();
       member.phone = cleanedPhone === "" ? undefined : cleanedPhone;
-    }
-    if (linkedUserId !== undefined) {
-      member.linkedUserId = linkedUserId || null;
-    }
-    if (role && ["owner", "admin", "member"].includes(role)) {
-      if (role === "owner" && !req.isGroupOwner) {
-        return sendError(
-          res,
-          403,
-          "FORBIDDEN",
-          "Only owner can assign owner role"
-        );
-      }
-      member.role = role;
     }
 
     await member.save();
@@ -138,7 +89,7 @@ export const updateMember = async (req, res) => {
         res,
         409,
         "CONFLICT",
-        "Member email already exists in the group"
+        "Member already exists in the group"
       );
     }
     return sendError(res, 500, "INTERNAL_ERROR", "Failed to update member");
@@ -160,10 +111,6 @@ export const deleteMember = async (req, res) => {
 
     if (!member) {
       return sendError(res, 404, "NOT_FOUND", "Member not found");
-    }
-
-    if (member.role === "owner") {
-      return sendError(res, 403, "FORBIDDEN", "Owner member cannot be deleted");
     }
 
     const splitItemCount = await SplitTransactionItem.countDocuments({
