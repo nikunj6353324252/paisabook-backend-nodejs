@@ -18,7 +18,12 @@ export const listMembers = async (req, res) => {
 
 export const addMember = async (req, res) => {
   try {
-    const { displayName, phone, groupId } = req.body;
+    const { displayName, phone } = req.body;
+    const groupId = req.group?._id || req.params?.groupId;
+
+    if (!groupId || !isValidObjectId(groupId)) {
+      return sendError(res, 400, "VALIDATION_ERROR", "Invalid group id");
+    }
 
     if (!displayName || typeof displayName !== "string") {
       return sendError(
@@ -30,7 +35,7 @@ export const addMember = async (req, res) => {
     }
 
     const memberPayload = {
-      groupId: groupId,
+      groupId,
       displayName: displayName.trim(),
     };
 
