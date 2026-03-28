@@ -8,54 +8,63 @@ const investmentSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    investment_name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
     investment_type: {
       type: String,
       required: true,
-      trim: true,
+      enum: ["stock_delivery", "stock_option", "index_option"],
+      index: true,
     },
-    platform: {
+    stock_name: {
       type: String,
-      default: "",
+      default: null,
       trim: true,
     },
-    invested_amount: {
+    index_name: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    buy_which_price_option: {
       type: Number,
-      required: true,
+      default: null,
       min: 0,
     },
-    current_value: {
-      type: Number,
-      required: true,
-      min: 0,
+    call_or_put: {
+      type: String,
+      enum: ["call", "put", null],
+      default: null,
     },
     quantity: {
       type: Number,
-      default: 0,
-      min: 0,
+      default: 1,
+      min: 1,
     },
-    average_buy_price: {
+    buy_price: {
       type: Number,
-      default: 0,
+      required: true,
       min: 0,
     },
-    current_price: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    investment_date: {
+    buy_price_date: {
       type: Date,
       required: true,
+      index: true,
     },
-    notes: {
+    sell_price: {
+      type: Number,
+      default: null,
+      min: 0,
+    },
+    sell_price_date: {
+      type: Date,
+      default: null,
+      index: true,
+    },
+    status: {
       type: String,
-      default: "",
-      trim: true,
+      required: true,
+      enum: ["open", "completed"],
+      default: "open",
+      index: true,
     },
   },
   {
