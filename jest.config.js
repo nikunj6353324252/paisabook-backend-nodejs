@@ -2,5 +2,5 @@ export default {
   testEnvironment: "node",
   testMatch: ["**/server/tests/**/*.test.js"],
   transform: {},
-  extensionsToTreatAsEsm: [".js"],
+  maxWorkers: 1,
 };

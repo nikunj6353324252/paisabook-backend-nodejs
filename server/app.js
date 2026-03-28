@@ -14,6 +14,7 @@ import requireAuth from "./middleware/requireAuth.js";
 import { GroupRoutes } from "./routes/groupRoutes.js";
 import { NotificationRoutes } from "./routes/notificationRoutes.js";
 import { GroupTransactionRoutes } from "./routes/groupTransactionRoutes.js";
+import { InvestmentRoutes } from "./routes/investmentRoutes.js";
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.use("/api", authMiddleware, ExpenseRoutes);
 app.use("/api", authMiddleware, BudgetRoutes);
 app.use("/api", authMiddleware, IncomeRoutes);
 app.use("/api", authMiddleware, TokenRoutes);
+app.use("/api", authMiddleware, InvestmentRoutes);
 app.use("/api", requireAuth, GroupRoutes);
 app.use("/api", requireAuth, NotificationRoutes);
 app.use("/api", requireAuth, GroupTransactionRoutes);
